@@ -1,0 +1,48 @@
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/*.log
+*.log
+
+# OS Files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Redis dumps
+dump.rdb
+
+# Backups
+*.sql.backup
+*.backup
+backup/
+
+# Sensitive
+config/secrets.php
+credentials.json
+client_secret*.json
+
+# Node modules (if using any JS build tools)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Composer (if using)
+vendor/
+composer.lock

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Modal</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 2rem;
+            background: #f3f4f6;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+        }
+        
+        .modal {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 60;
+        }
+
+        .modal.show {
+            display: flex !important;
+        }
+
+        .modal .box {
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            width: 500px;
+            max-width: 95%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        #log {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.875rem;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test du Modal</h1>
+    <p>Cliquez sur le bouton ci-dessous pour tester le modal :</p>
+    
+    <button id="btnTest" class="btn">
+        Ouvrir le Modal (Test)
+    </button>
+    
+    <div id="log"></div>
+
+    <!-- Modal -->
+    <div class="modal" id="testModal" aria-hidden="true">
+        <div class="box" role="dialog" aria-modal="true">
+            <h3>Test Modal</h3>
+            <p>Si vous voyez ceci, le modal fonctionne ! ✅</p>
+            <button id="btnClose" class="btn">Fermer</button>
+        </div>
+    </div>
+
+    <script>
+        const log = document.getElementById('log');
+        const btnTest = document.getElementById('btnTest');
+        const modal = document.getElementById('testModal');
+        const btnClose = document.getElementById('btnClose');
+        
+        function addLog(message) {
+            const timestamp = new Date().toLocaleTimeString('fr-FR');
+            log.textContent += `[${timestamp}] ${message}\n`;
+            console.log(message);
+        }
+        
+        addLog('✅ Page chargée');
+        addLog('Elements trouvés:');
+        addLog(`  - btnTest: ${!!btnTest}`);
+        addLog(`  - modal: ${!!modal}`);
+        addLog(`  - btnClose: ${!!btnClose}`);
+        
+        if (btnTest) {
+            btnTest.addEventListener('click', function() {
+                addLog('🖱️ Clic sur le bouton');
+                if (modal) {
+                    modal.classList.add('show');
+                    modal.setAttribute('aria-hidden', 'false');
+                    addLog('✅ Classe "show" ajoutée au modal');
+                    addLog(`Classes actuelles: "${modal.className}"`);
+                } else {
+                    addLog('❌ Modal non trouvé');
+                }
+            });
+            addLog('✅ Listener ajouté au bouton');
+        }
+        
+        if (btnClose) {
+            btnClose.addEventListener('click', function() {
+                addLog('🚪 Fermeture du modal');
+                if (modal) {
+                    modal.classList.remove('show');
+                    modal.setAttribute('aria-hidden', 'true');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

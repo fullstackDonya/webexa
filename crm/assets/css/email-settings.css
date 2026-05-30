@@ -1,0 +1,552 @@
+/* =============================================
+   EMAIL SETTINGS - Styles
+   ============================================= */
+
+:root {
+    --primary-color: #004085;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+    --light-bg: #f8f9fa;
+    --border-radius: 0.5rem;
+    --box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    --box-shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+    --transition: all 0.3s ease;
+}
+
+body {
+    background-color: #f5f6fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+
+.main-content {
+    flex: 1;
+    padding: 2rem;
+}
+
+/* =============================================
+   PAGE HEADER
+   ============================================= */
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.page-header h1 {
+    font-weight: 700;
+    color: #333;
+    font-size: 1.75rem;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.page-header h1 i {
+    color: var(--primary-color);
+    font-size: 2rem;
+}
+
+.btn-group {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+/* =============================================
+   INFO BOX
+   ============================================= */
+
+.info-box {
+    background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border-left: 5px solid var(--info-color);
+}
+
+.info-content {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+.info-box i {
+    font-size: 1.5rem;
+    color: var(--info-color);
+    flex-shrink: 0;
+}
+
+.info-box strong {
+    color: #333;
+    font-weight: 700;
+}
+
+.info-box p {
+    margin: 0.25rem 0 0 0;
+    color: #555;
+    font-size: 0.95rem;
+}
+
+/* =============================================
+   STATISTICS
+   ============================================= */
+
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+    text-align: center;
+    transition: var(--transition);
+    border-top: 4px solid var(--primary-color);
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 1.5rem 3rem rgba(0, 64, 133, 0.25);
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: var(--secondary-color);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* =============================================
+   CONFIG SECTION
+   ============================================= */
+
+.config-section {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.config-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #003366 100%);
+    color: white;
+    padding: 1.5rem;
+}
+
+.config-header h5 {
+    margin: 0;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.configs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    padding: 2rem;
+}
+
+/* =============================================
+   CONFIG CARD
+   ============================================= */
+
+.config-card {
+    border-radius: var(--border-radius);
+    border: 2px solid #e0e0e0;
+    background: white;
+    overflow: hidden;
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+}
+
+.config-card:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 0.5rem 1.5rem rgba(0, 64, 133, 0.15);
+    transform: translateY(-4px);
+}
+
+.config-card.inactive {
+    opacity: 0.7;
+    border-color: #d0d0d0;
+}
+
+.config-header-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e8eef5 100%);
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.config-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.config-title {
+    flex: 1;
+}
+
+.config-title h6 {
+    margin: 0 0 0.25rem 0;
+    font-weight: 700;
+    color: #333;
+    word-break: break-all;
+}
+
+.config-title small {
+    color: var(--secondary-color);
+    font-weight: 600;
+}
+
+.config-body {
+    padding: 1.25rem;
+    flex: 1;
+}
+
+.config-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+}
+
+.info-item .label {
+    color: var(--secondary-color);
+    font-weight: 600;
+}
+
+.info-item .value {
+    color: #333;
+    font-weight: 500;
+}
+
+.config-actions {
+    padding: 1rem 1.25rem;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.config-actions .btn {
+    flex: 1;
+    min-width: 100px;
+}
+
+.config-tools {
+    padding: 0.75rem 1.25rem;
+    background: #f8f9fa;
+    text-align: center;
+}
+
+.config-tools a {
+    color: #495057;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.config-tools a:hover {
+    color: var(--primary-color);
+}
+
+.config-tools i {
+    margin-right: 0.25rem;
+}
+
+/* =============================================
+   NO DATA
+   ============================================= */
+
+.no-data {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--secondary-color);
+}
+
+.no-data i {
+    font-size: 3rem;
+    opacity: 0.3;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.no-data p {
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+}
+
+/* =============================================
+   FAQ SECTION
+   ============================================= */
+
+.faq-section {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+}
+
+.faq-section h5 {
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #333;
+}
+
+.accordion-button {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: rgba(0, 64, 133, 0.1);
+    color: var(--primary-color);
+}
+
+.accordion-body {
+    color: #555;
+}
+
+.accordion-body ol {
+    margin-bottom: 0;
+}
+
+.accordion-body li {
+    margin-bottom: 0.75rem;
+}
+
+.accordion-body strong {
+    color: #333;
+}
+
+/* =============================================
+   BUTTONS
+   ============================================= */
+
+.btn {
+    font-weight: 600;
+    border-radius: var(--border-radius);
+    padding: 0.625rem 1.25rem;
+    font-size: 0.95rem;
+    transition: var(--transition);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 1rem 2rem rgba(0, 64, 133, 0.3);
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.btn-outline-primary {
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+    background: white;
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-outline-info {
+    border: 2px solid var(--info-color);
+    color: var(--info-color);
+    background: white;
+}
+
+.btn-outline-danger {
+    border: 2px solid var(--danger-color);
+    color: var(--danger-color);
+    background: white;
+}
+
+.btn-sm {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+}
+
+/* =============================================
+   BADGES
+   ============================================= */
+
+.badge {
+    padding: 0.5rem 0.75rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.bg-success {
+    background-color: var(--success-color) !important;
+}
+
+.bg-secondary {
+    background-color: var(--secondary-color) !important;
+}
+
+/* =============================================
+   MODAL
+   ============================================= */
+
+.modal-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #003366 100%);
+    color: white;
+    border-bottom: none;
+}
+
+.modal-title {
+    font-weight: 700;
+}
+
+.btn-close {
+    filter: brightness(0) invert(1);
+}
+
+.form-label {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+.form-control,
+.form-select {
+    border: 2px solid #d9e7f7;
+    border-radius: var(--border-radius);
+    padding: 0.75rem;
+    font-size: 0.9rem;
+    transition: var(--transition);
+}
+
+.form-control:focus,
+.form-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 64, 133, 0.1);
+}
+
+/* =============================================
+   RESPONSIVE
+   ============================================= */
+
+@media (max-width: 768px) {
+    .main-content {
+        padding: 1rem;
+    }
+
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .page-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .configs-grid {
+        grid-template-columns: 1fr;
+        padding: 1rem;
+    }
+
+    .config-header-card {
+        flex-wrap: wrap;
+    }
+
+    .config-actions .btn {
+        flex: 0 1 calc(33.333% - 0.5rem);
+        min-width: auto;
+    }
+
+    .stats-container {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .main-content {
+        padding: 0.5rem;
+    }
+
+    .page-header h1 {
+        font-size: 1.25rem;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+    }
+
+    .config-actions {
+        flex-direction: column;
+    }
+
+    .config-actions .btn {
+        flex: 1;
+        min-width: auto;
+    }
+
+    .info-box {
+        padding: 1rem;
+    }
+}

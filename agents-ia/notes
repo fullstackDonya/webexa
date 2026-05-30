@@ -1,0 +1,501 @@
+CAHIER DES CHARGES – SYSTÈME D’AGENTS IA POUR CRM
+1. Présentation du projet
+1.1 Objectif
+
+Mettre en place une couche d’intelligence artificielle au-dessus du CRM existant afin d’automatiser :
+
+Lecture et compréhension des communications (email & WhatsApp)
+
+Qualification des leads
+
+Analyse commerciale et opérationnelle
+
+Génération de campagnes marketing
+
+Gestion des missions et dossiers
+
+Génération de rappels et tâches
+
+Exécution autonome d’actions autorisées
+
+L’IA doit agir comme un assistant opérationnel autonome supervisé, capable de :
+
+Proposer → Attendre validation → Agir seule si autorisée
+
+1.2 Principe général
+
+Le CRM reste le système central.
+Les agents IA sont une surcouche microservices Python connectée via API interne.
+
+Architecture :
+
+CRM (PHP)
+↓
+API interne
+↓
+Agents IA Python
+↓
+Base vectorielle (postgresql?) + LLM + Queue
+↓
+Retour CRM
+
+2. Périmètre fonctionnel
+2.1 Gestion des communications
+Emails
+
+L’IA doit :
+
+Lire tous les emails entrants
+
+Détecter le type :
+
+nouveau prospect
+
+relance
+
+client existant
+
+support
+
+spam
+
+Résumer automatiquement
+
+Extraire informations importantes :
+
+nom
+
+téléphone
+
+besoin
+
+budget
+
+urgence
+
+Associer au bon contact / lead / dossier
+
+Créer un lead si inexistant
+
+Proposer réponse automatique
+
+Envoyer réponse si autorisée
+
+WhatsApp
+
+Même logique que email avec en plus :
+
+Détection du ton (chaud / froid / énervé / urgent)
+
+Détection conversation commerciale
+
+Suggestion de réponse instantanée
+
+Possibilité d’auto-réponse
+
+2.2 Gestion des leads
+
+L’IA doit :
+
+Scorer chaque lead automatiquement
+
+Mettre à jour le score dynamiquement
+
+Détecter lead chaud / froid / mort
+
+Proposer actions commerciales
+
+Prioriser les relances
+
+Identifier opportunités commerciales
+
+Score basé sur :
+
+comportement
+
+fréquence
+
+contenu messages
+
+historique interactions
+
+type de demande
+
+2.3 Campagnes marketing
+
+L’IA doit :
+
+Créer campagnes email et WhatsApp
+
+Générer contenu personnalisé
+
+Segmenter les contacts
+
+Optimiser horaires d’envoi
+
+Lancer campagne automatiquement
+
+Analyser résultats
+
+Optimiser prochaines campagnes
+
+2.4 Gestion missions et dossiers
+
+Chaque mission possède un dossier.
+
+L’IA doit :
+
+Lire l’état du dossier
+
+Détecter blocages
+
+Détecter retards
+
+Créer tâches nécessaires
+
+Alerter responsables
+
+Planifier actions quotidiennes
+
+2.5 Gestion des tâches et rappels
+
+Chaque jour l’IA doit :
+
+Générer une liste de tâches
+
+Prioriser
+
+Envoyer notifications
+
+Suivre exécution
+
+Relancer si non effectué
+
+2.6 Mode autonome
+
+Si autorisé par l’utilisateur :
+
+L’IA peut :
+
+Envoyer emails
+
+Répondre WhatsApp
+
+Planifier rendez-vous
+
+Créer tâches
+
+Affecter commerciaux
+
+Relancer clients
+
+Mettre à jour statuts
+
+Toutes actions doivent être :
+
+journalisées
+
+annulables
+
+traçables
+
+3. Agents IA à développer
+3.1 Inbox Agent
+
+Analyse emails
+
+3.2 WhatsApp Agent
+
+Analyse conversations
+
+3.3 Lead Analyst Agent
+
+Qualification + scoring
+
+3.4 Campaign Agent
+
+Marketing automation
+
+3.5 Mission Agent
+
+Suivi opérationnel dossiers
+
+3.6 Scheduler Agent
+
+Rappels quotidiens
+
+3.7 Executor Agent
+
+Exécution autonome
+
+3.8 Supervisor Agent
+
+Contrôle cohérence et sécurité
+
+4. Architecture technique
+4.1 Technologies
+
+CRM existant :
+
+PHP
+
+MySQL
+
+JavaScript
+
+Nouveaux composants :
+
+Backend IA :
+
+Python
+
+FastAPI
+
+Traitement asynchrone :
+
+Celery
+
+Redis
+
+IA :
+
+LLM API ou modèle local
+
+Embeddings
+
+RAG
+
+Stockage mémoire IA :
+
+Vector database
+
+Monitoring :
+
+Logs + dashboard
+
+4.2 Communication CRM ↔ IA
+
+Communication via API REST interne sécurisée.
+
+CRM envoie événements :
+
+nouveau message
+
+nouveau lead
+
+changement statut
+
+nouvelle mission
+
+IA renvoie :
+
+analyse
+
+suggestions
+
+actions exécutées
+
+4.3 Stockage
+
+Base CRM = données officielles
+Base IA = mémoire contextuelle
+
+Tables supplémentaires :
+
+agent_logs
+agent_actions
+agent_permissions
+agent_memory
+daily_tasks
+
+5. Fonctionnement IA
+5.1 Compréhension
+
+Utilisation LLM pour :
+
+analyse texte
+
+classification
+
+résumé
+
+génération
+
+5.2 Mémoire
+
+RAG avec :
+
+historique client
+
+emails
+
+messages
+
+dossier mission
+
+5.3 Décision
+
+Règles métiers + IA combinées
+
+5.4 Action
+
+File de tâches → exécution → journalisation
+
+6. Interface utilisateur
+6.1 Dans le CRM
+
+Ajouter un panneau IA :
+
+suggestions IA
+
+tâches générées
+
+actions proposées
+
+historique décisions IA
+
+bouton autoriser / refuser
+
+6.2 Modes
+Mode assisté
+
+IA propose uniquement
+
+Mode semi-auto
+
+IA agit sur actions simples
+
+Mode autonome
+
+IA agit sans validation sauf actions critiques
+
+7. Sécurité
+
+authentification API interne
+
+permissions par utilisateur
+
+journal complet des actions
+
+conformité RGPD
+
+possibilité désactiver agents
+
+blacklist actions dangereuses
+
+8. Performance attendue
+
+Temps analyse message : < 5 secondes
+Création tâche : instantané
+Traitement campagne : asynchrone
+Système capable de traiter : milliers messages / jour
+
+9. Étapes de réalisation
+Phase 1 – Base IA
+
+Connexion CRM ↔ Python
+Lecture emails
+Résumé automatique
+
+Phase 2 – Compréhension métier
+
+Lead scoring
+Association contacts
+
+Phase 3 – Automatisation
+
+Rappels + tâches
+
+Phase 4 – Communication
+
+Réponses automatiques
+
+Phase 5 – Autonomie
+
+Exécution actions
+
+Phase 6 – Optimisation
+
+Apprentissage comportement utilisateurs
+
+10. Critères de réussite
+
+Le système est validé si :
+
+90% des messages correctement classifiés
+
+réduction du travail humain administratif > 50%
+
+aucune action critique sans validation
+
+traçabilité totale
+
+amélioration conversion commerciale
+
+11. Livrables
+
+Microservices Python agents
+
+API interne documentée
+
+Interface CRM IA
+
+Dashboard logs
+
+Documentation technique
+
+Guide utilisateur
+
+____________________________________________________
+
+Excellente question sur l'architecture ! Analysons les deux options :
+
+📊 MySQL (actuel) vs PostgreSQL
+✅ MySQL est OK pour Phase 1 - Voici pourquoi :
+Avantages actuels :
+
+✅ Même base que le CRM → Accès direct aux tables emails, leads, contacts
+✅ Pas de synchronisation → Les agents lisent/écrivent directement
+✅ Simplicité → Déjà installé avec MAMP
+✅ Requêtes jointes → Facile de croiser données CRM + IA
+✅ Pas de duplication → Une seule source de vérité
+Limitations :
+
+❌ JSON moins performant (pas de JSONB)
+❌ Charge sur la base CRM principale
+❌ Pas de types avancés (arrays, hstore)
+🚀 PostgreSQL serait mieux pour Phase 3+ si :
+Cas d'usage nécessitant PostgreSQL :
+
+📈 Volume logs IA > 100k entrées/mois
+🔍 Analytics complexes sur JSON
+🧠 Recherche vectorielle avancée (pgvector)
+⚡ Performances deviennent critiques
+Architecture hybride idéale (futur) :
+
+
+MySQL (CRM)          PostgreSQL (IA)       Redis           ChromaDB
+├── customers        ├── agent_logs        ├── cache       ├── embeddings
+├── emails           ├── agent_memory      └── celery      └── vectors
+├── leads            ├── agent_actions
+├── contacts         └── analytics_*
+└── interactions
+
+
+
+💡 Ma recommandation
+Pour l'instant : Gardez MySQL
+Raison : Pour Phase 1 avec 2 agents, MySQL suffit largement. Vous gagnez en simplicité.
+
+Plus tard : Migrer vers PostgreSQL
+Quand vous aurez :
+
+5+ agents actifs
+50k+ logs IA par mois
+Besoin de recherche vectorielle performante (Phase 2: RAG)
+🔧 Voulez-vous que je prépare une version PostgreSQL ?
+Je peux créer :
+
+Version PostgreSQL alternative (database_pg.py + migration SQL)
+Architecture hybride (MySQL pour CRM + PostgreSQL pour IA)
+Documentation migration MySQL → PostgreSQL

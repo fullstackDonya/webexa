@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Serenaya — Bien-être au travail</title>
+  <meta name="description" content="Serenaya aide à prévenir et gérer le burnout via des programmes guidés, quizzes et audios. Disponible sur iOS et Android." />
+  <meta name="theme-color" content="#16202a" />
+  <style>
+    :root{
+      --bg:#0f1720;
+      --card:#121821;
+      --accent:#ffde59;
+      --muted:#bfc9d1;
+      --glass: rgba(255,255,255,0.03);
+      --radius:16px;
+      --max:1200px;
+      font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+      color-scheme: dark;
+    }
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,#0b1220 0%, #16202a 100%);color:#e6eef6}
+    .wrap{max-width:var(--max);margin:0 auto;padding:36px}
+    header{display:flex;align-items:center;gap:18px}
+    .logo{width:64px;height:64px;border-radius:14px;background:linear-gradient(135deg,#22344a,#16202a);display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,222,89,0.12)}
+    .logo svg{width:40px;height:40px}
+    h1{
+      font-size:32px;
+      margin:0;
+      font-weight:800;
+      letter-spacing:0.6px;
+      color: #ffde59; /* fallback */
+      /* golden gradient text */
+      background: linear-gradient(90deg, #ffde59 0%, #b2f7b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: 0 6px 18px rgba(0,0,0,0.45);
+    }
+    p.lead{color:var(--muted);margin:6px 0 20px;font-size:16px}
+
+    .hero{display:grid;grid-template-columns:1fr 420px;gap:28px;align-items:center;margin-top:28px}
+    @media (max-width:900px){.hero{grid-template-columns:1fr;}
+      .hero-right{order:-1}
+    }
+
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:var(--radius);padding:22px;box-shadow:0 6px 24px rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.03)}
+
+    .cta-row{display:flex;gap:12px;align-items:center}
+    .btn{display:inline-flex;align-items:center;gap:12px;background:var(--accent);color:#10202a;padding:12px 16px;border-radius:12px;font-weight:700;text-decoration:none}
+    .btn.secondary{background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,0.04);padding:10px}
+
+    .stores{display:flex;gap:12px;margin-top:12px}
+    .store-btn{display:inline-flex;align-items:center;gap:10px;background:transparent;border-radius:12px;padding:8px 12px;border:1px solid rgba(255,255,255,0.04);color:var(--muted);text-decoration:none}
+    .store-badge{height:36px}
+
+    .hero-right{display:flex;flex-direction:column;gap:12px}
+  .phone-mock{background:linear-gradient(180deg,#0c1420,#0f2a36);border-radius:28px;padding:14px;width:100%;height:600px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.04)}
+  .screen{width:280px;height:540px;border-radius:18px;background:linear-gradient(180deg,#08121a,#102433);box-shadow:inset 0 2px 12px rgba(0,0,0,0.7);display:flex;flex-direction:column;overflow:hidden}
+  .screen .top{padding:14px;color:var(--muted);font-size:13px}
+  .screen .content{flex:1;display:flex;flex-direction:column;gap:12px;padding:12px;min-height:calc(100% - 58px);overflow:auto}
+    .feature{background:var(--glass);padding:12px;border-radius:12px;color:#eaf7f0}
+
+    .features{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:28px}
+    @media (max-width:900px){.features{grid-template-columns:repeat(1,1fr)}}
+    .feature-card{background:transparent;border-radius:12px;padding:14px;border:1px solid rgba(255,255,255,0.03)}
+    .feature-card h3{margin:0 0 8px;color:var(--accent)}
+    .feature-card p{margin:0;color:var(--muted)}
+
+    footer{margin-top:40px;padding:18px 0;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
+    .small{font-size:13px}
+
+    /* small helper */
+    .pill{background:rgba(255,222,89,0.08);color:var(--accent);padding:6px 10px;border-radius:999px;font-weight:700}
+
+    .download-grid{display:flex;gap:12px;flex-wrap:wrap}
+
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo" aria-hidden>
+    <!-- S bien défini (plein) pour Serenaya -->
+    <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+      <!-- filled S: balanced, crisp, suitable for icon and favicon -->
+      <path d="M36 7
+               C30 7 25 10 24 14
+               C23 18 27 20 31 22
+               C35 24 38 27 38 31
+               C38 35 33 38 27 39
+               C20 40 16 39 13 37
+               L13 33
+               C16 35 19 36 24 36
+               C29 36 33 34 33 31
+               C33 28 29 26 25 24
+               C21 22 17 20 17 16
+               C17 12 21 9 27 9
+               C32 9 36 9 36 7 Z"
+            fill="#ffde59" />
+    </svg>
+      </div>
+      <div>
+        <h1>Serenaya</h1>
+        <div class="small">Accompagnement contre le burnout • Programmes guidés • Audios & Quiz</div>
+      </div>
+    </header>
+
+    <main class="hero">
+      <section class="hero-left">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div class="pill">Nouveau</div>
+              <h2 style="margin:12px 0 6px">Retrouve ton équilibre au travail</h2>
+              <p class="lead">Serenaya te propose des parcours progressifs (vidéos, exercices, journaux) pour prévenir le burnout et retrouver de l'énergie. Testé par des professionnels.</p>
+            </div>
+            <div style="text-align:right;color:var(--muted)">
+              <div style="font-weight:800;font-size:20px">+ programmes</div>
+              <div style="font-size:12px">contenu régulier</div>
+            </div>
+          </div>
+
+          <div style="margin-top:16px" class="cta-row">
+            <a class="btn" href="#download" id="try-app">Télécharger l'app</a>
+            <a class="btn secondary" href="#features">En savoir plus</a>
+          </div>
+
+          <div class="stores" style="margin-top:18px">
+            <!-- Placeholders : replace with your real store links -->
+            <a class="store-btn" href="https://play.google.com/store" target="_blank" rel="noopener noreferrer">
+              <img class="store-badge" src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Google Play" />
+            </a>
+            <a class="store-btn" href="https://www.apple.com/app-store/" target="_blank" rel="noopener noreferrer">
+              <img class="store-badge" src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="App Store" />
+            </a>
+          </div>
+
+          <div style="margin-top:18px;color:var(--muted);font-size:14px">Disponible sur iPhone et Android. Lien de téléchargement direct depuis ton téléphone ou via les stores.</div>
+        </div>
+
+        <div class="features">
+          <div class="feature-card card">
+            <h3>Parcours guidés</h3>
+            <p>Des programmes structurés jour par jour, avec vidéos et exercices simples à suivre.</p>
+          </div>
+          <div class="feature-card card">
+            <h3>Évaluations</h3>
+            <p>Quiz personnalisés pour évaluer ton état et recevoir un plan d'actions.</p>
+          </div>
+          <div class="feature-card card">
+            <h3>Contenus audio</h3>
+            <p>Méditations et exercices audio pour te recentrer en quelques minutes.</p>
+          </div>
+        </div>
+
+      </section>
+
+      <aside class="hero-right">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="font-weight:700">Télécharger</div>
+            <div style="color:var(--muted);font-size:13px">iOS & Android</div>
+          </div>
+
+          <div class="phone-mock" style="margin-top:14px">
+
+            <!-- styles scoped au mock (léger) -->
+            <style>
+              .phone-mock { display:flex;justify-content:center }
+              .phone-mock .screen { width:180px; height:360px; border-radius:22px; background:linear-gradient(180deg,#0f2130,#122733); padding:10px; box-shadow: 0 10px 30px rgba(0,0,0,0.45); border: 4px solid rgba(255,255,255,0.03); overflow:hidden; position:relative; }
+              .phone-mock .top { color:var(--muted); font-size:12px; text-align:center; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.02); margin-bottom:8px }
+              .mock-slides { position:relative; height:100%; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-start }
+              .mock-slide { position:absolute; left:12px; right:12px; top:44px; bottom:12px; padding:12px; display:flex; flex-direction:column; gap:12px; border-radius:12px; background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01)); transform:translateY(8px); opacity:0; transition: transform 360ms cubic-bezier(.2,.9,.2,1), opacity 360ms ease; box-shadow: 0 8px 20px rgba(0,0,0,0.45); }
+              .mock-slide.active { transform:translateY(0); opacity:1 }
+              /* card-like rows to mirror app screens */
+              .mock-row { background: rgba(255,255,255,0.018); padding:10px 12px; border-radius:12px; display:flex; flex-direction:column; gap:8px }
+              .mock-row .row-title { color:#ffde59; font-weight:800; font-size:14px; letter-spacing:0.3px }
+              .mock-row .row-sub { color:#e6eef6; font-size:13px; font-weight:600; opacity:0.95 }
+              .mock-small { color:var(--muted); font-size:12px }
+              /* progress */
+              .mock-progress { width:100%; height:10px; background:rgba(255,255,255,0.02); border-radius:10px; overflow:hidden; border:1px solid rgba(0,0,0,0.2) }
+              .mock-progress .fill { height:100%; background:linear-gradient(90deg,#b2f7b8,#ffde59); width:40%; transition: width 360ms cubic-bezier(.2,.9,.2,1) }
+              .mock-actions { display:flex; gap:8px; margin-top:6px }
+              .mock-btn { flex:1; text-align:center; padding:10px 8px; border-radius:12px; font-weight:800; font-size:14px; cursor:pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.25) }
+              .btn-primary { background:#ffde59; color:#16202a; border: none }
+              .btn-secondary { background:transparent; border:1px solid rgba(255,255,255,0.04); color:#dbeef6 }
+              .mock-option { background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00)); padding:10px; border-radius:10px; color:#dbeef6; font-weight:700; text-align:center }
+              .mock-option.selected { background:#ffde59; color:#16202a }
+              .muted { color:var(--muted); font-size:12px; margin-top:auto; text-align:center }
+              .mock-indicators { position:absolute; left:0; right:0; bottom:8px; display:flex; justify-content:center; gap:8px; }
+              .mock-indicators .dot { width:8px; height:8px; border-radius:999px; background:rgba(255,255,255,0.12); box-shadow: inset 0 -1px 0 rgba(0,0,0,0.3); transition:background-color 220ms ease, transform 220ms ease }
+              .mock-indicators .dot.active { background:#ffde59; transform:scale(1.25) }
+            </style>
+
+            <div class="screen">
+              <div class="top">Séréna — Programme du jour</div>
+              <div class="content">
+                <div class="mock-slides" aria-hidden="false">
+                  <!-- Slide 1: MainScreen preview (carousel / highlighted day) -->
+                  <div class="mock-slide active" role="group" aria-label="Aperçu accueil">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                      <div style="display:flex;flex-direction:column">
+                        <div class="row-title">Programme</div>
+                        <div class="row-sub" style="font-size:12px">Type • Jour 3</div>
+                      </div>
+                      <div style="font-weight:800;color:#b2f7b8">Jour 3</div>
+                    </div>
+
+                    <div class="mock-row">
+                      <div style="display:flex;gap:10px;align-items:center">
+                        <div style="width:56px;height:56px;border-radius:14px;background:rgba(255,222,89,0.10);display:flex;align-items:center;justify-content:center;font-weight:800;color:#ffde59">3</div>
+                        <div style="flex:1">
+                          <div style="font-weight:800;color:#e6eef6">Respiration guidée</div>
+                          <div style="color:var(--muted);font-size:12px;margin-top:4px">Vidéo • 5 min</div>
+                        </div>
+                        <div style="text-align:right;color:#b2f7b8;font-weight:800">40%</div>
+                      </div>
+                      <div class="mock-progress" style="margin-top:10px"><div class="fill" style="width:40%"></div></div>
+                      <div style="display:flex;gap:8px;margin-top:10px">
+                        <div class="mock-btn btn-primary" style="flex:1">Voir le programme</div>
+                      </div>
+                    </div>
+
+                    <div class="mock-row" style="margin-top:6px">
+                      <div style="display:flex;justify-content:space-between;align-items:center">
+                        <div style="font-weight:800;color:#e6eef6">Séréna</div>
+                        <div style="color:var(--muted);font-size:12px">Conseil du jour</div>
+                      </div>
+                      <div style="color:var(--muted);font-size:13px;margin-top:6px">Pratique 2 minutes de respiration consciente pour te recentrer.</div>
+                    </div>
+                  </div>
+
+                  <!-- Slide 2: ProgramDetails preview (steps list) -->
+                  <div class="mock-slide" role="group" aria-label="Aperçu programme détaillé">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                      <div>
+                        <div class="row-title">Respiration guidée</div>
+                        <div class="row-sub">Jour 3 • Vidéo & Quiz</div>
+                      </div>
+                      <div style="color:#b2f7b8;font-weight:800">Progression</div>
+                    </div>
+
+                    <div class="mock-row">
+                      <div style="display:flex;justify-content:space-between;align-items:center">
+                        <div style="display:flex;align-items:center;gap:10px">
+                          <div style="width:36px;height:36px;border-radius:8px;background:#e6f0fa;display:flex;align-items:center;justify-content:center;color:#16202a">▶</div>
+                          <div style="font-weight:800;color:#e6eef6">Vidéo : Respiration</div>
+                        </div>
+                        <div style="color:#b2f7b8">✓</div>
+                      </div>
+                      <div style="margin-top:8px;color:var(--muted);font-size:13px">Durée • 5 min</div>
+                    </div>
+
+                    <div class="mock-row">
+                      <div style="display:flex;justify-content:space-between;align-items:center">
+                        <div style="display:flex;align-items:center;gap:10px">
+                          <div style="width:36px;height:36px;border-radius:8px;background:#ffe4e1;display:flex;align-items:center;justify-content:center;color:#16202a">?</div>
+                          <div style="font-weight:800;color:#e6eef6">Quiz : 5 questions</div>
+                        </div>
+                        <div style="color:#b2f7b8">—</div>
+                      </div>
+                      <div style="margin-top:8px;color:var(--muted);font-size:13px">Termine le quiz pour valider cette étape</div>
+                    </div>
+
+                    <div class="mock-row" style="margin-top:6px;display:flex;gap:8px;align-items:center">
+                      <div class="mock-btn btn-secondary">Voir la vidéo</div>
+                      <div class="mock-btn btn-primary">Commencer le quiz</div>
+                    </div>
+                  </div>
+
+                  <!-- Slide 3: ChatBot preview (assistant) -->
+                  <div class="mock-slide" role="group" aria-label="Aperçu assistant">
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <div style="width:38px;height:38px;border-radius:19px;background:#16202a;border:2px solid #ffde59;display:flex;align-items:center;justify-content:center;color:#ffde59">S</div>
+                      <div style="font-weight:800;color:#e6eef6">Assistant Serenaya</div>
+                    </div>
+
+                    <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px">
+                      <div style="background:#22344a;padding:10px;border-radius:14px;color:#e0e6ed;max-width:85%">Bonjour — comment te sens-tu aujourd'hui ?</div>
+                      <div style="align-self:flex-end;background:#ffde59;padding:8px;border-radius:14px;color:#16202a;max-width:70%">Plutôt stressé·e</div>
+                      <div style="display:flex;gap:8px;margin-top:6px">
+                        <div class="mock-option">Parler</div>
+                        <div class="mock-option">Respiration</div>
+                        <div class="mock-option">Exercice</div>
+                      </div>
+                    </div>
+
+                    <div style="margin-top:auto;display:flex;align-items:center;gap:8px">
+                      <input type="text" placeholder="Posez une question" style="flex:1;padding:8px;border-radius:18px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:#e6eef6" />
+                      <div class="mock-btn btn-primary" style="padding:8px 10px;border-radius:18px">Envoyer</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="mock-indicators" aria-hidden="true">
+                  <span class="dot active"></span>
+                  <span class="dot"></span>
+                  <span class="dot"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:12px">
+            <div class="download-grid">
+              <a class="btn" href="#" onclick="openDeepLink('android')">Android</a>
+              <a class="btn" href="#" onclick="openDeepLink('ios')">iOS</a>
+              <a class="btn secondary" href="#contact">Contact / Demo</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-weight:800">Témoignages</div>
+              <div style="color:var(--muted);font-size:13px">Ils ont retrouvé de la sérénité</div>
+            </div>
+            <div style="font-size:12px;color:var(--muted)">4.7 ★</div>
+          </div>
+          <div style="margin-top:8px;color:var(--muted);font-size:14px">"Des exercices simples et efficaces. Je recommande." — A.</div>
+        </div>
+      </aside>
+    </main>
+
+    <section id="features" style="margin-top:30px">
+      <div class="card">
+        <h2>Fonctionnalités clés</h2>
+        <p style="color:var(--muted)">Des outils concrets pour agir au quotidien :</p>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:12px">
+          <div style="background:var(--glass);padding:12px;border-radius:12px">Quiz diagnostiques</div>
+          <div style="background:var(--glass);padding:12px;border-radius:12px">Programmes progressifs</div>
+          <div style="background:var(--glass);padding:12px;border-radius:12px">Audios guidés</div>
+          <div style="background:var(--glass);padding:12px;border-radius:12px">Journal & suivi</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact" style="margin-top:22px">
+      <div class="card">
+        <h2>Contact & Demo</h2>
+        <p style="color:var(--muted)">Besoin d'une démo ou d'un partenariat ? Envoie-nous un message et nous te recontactons.</p>
+        <form onsubmit="event.preventDefault();alert('Merci — nous vous contacterons bientôt');" style="display:flex;gap:8px;flex-wrap:wrap">
+          <input placeholder="Ton nom" style="flex:1;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:#fff" required />
+          <input placeholder="Email" type="email" style="flex:1;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:#fff" required />
+          <button class="btn" style="padding:10px 18px;border-radius:10px">Envoyer</button>
+        </form>
+      </div>
+    </section>
+
+    <footer>
+      <div class="small">© Serenaya — Tous droits réservés</div>
+      <div style="display:flex;gap:12px;align-items:center"><a style="color:var(--muted);text-decoration:none" href="#privacy">Politique de confidentialité</a><a style="color:var(--muted);text-decoration:none;margin-left:8px" href="#terms">CGU</a></div>
+    </footer>
+  </div>
+
+  <script>
+    // Deep link helper: try to open app via custom scheme or fallback to store
+    function openDeepLink(platform){
+      const iosAppStore = 'https://apps.apple.com/app/idYOUR_APP_ID';
+      const androidPlay = 'https://play.google.com/store/apps/details?id=YOUR.PACKAGE.NAME';
+      // Replace with your app scheme
+      const schemeIos = 'serenaya://';
+      const schemeAndroid = 'serenaya://';
+
+      if(platform === 'ios'){
+        // try scheme then fallback
+        window.location = schemeIos;
+        setTimeout(()=>{ window.location = iosAppStore; }, 1200);
+      } else {
+        window.location = schemeAndroid;
+        setTimeout(()=>{ window.location = androidPlay; }, 1200);
+      }
+    }
+
+    document.getElementById('try-app').addEventListener('click', (e)=>{
+      e.preventDefault();
+      // simple UX: open app store chooser on mobile, or show a message on desktop
+      if(/Android/i.test(navigator.userAgent)){
+        openDeepLink('android');
+      } else if(/iPhone|iPad|iPod/i.test(navigator.userAgent)){
+        openDeepLink('ios');
+      } else {
+        alert('Ouvre cette page depuis ton téléphone pour installer l\'application ou utilise les liens des stores.');
+      }
+    });
+
+    // Phone mock slideshow logic
+    (function(){
+      const slides = Array.from(document.querySelectorAll('.mock-slide'));
+      const dots = Array.from(document.querySelectorAll('.mock-indicators .dot'));
+      if(!slides.length || !dots.length) return;
+      let idx = 0;
+      const setActive = (i) => {
+        slides.forEach((s, j)=> s.classList.toggle('active', j===i));
+        dots.forEach((d, j)=> d.classList.toggle('active', j===i));
+      };
+      // auto rotate
+      let timer = null;
+      const start = ()=> { timer = setInterval(()=>{ idx = (idx+1) % slides.length; setActive(idx); }, 2600); };
+      const stop = ()=> { if(timer){ clearInterval(timer); timer = null } };
+      // start
+      start();
+      // pause on hover (desktop)
+      const screen = document.querySelector('.phone-mock .screen');
+      if(screen){
+        screen.addEventListener('mouseenter', stop);
+        screen.addEventListener('mouseleave', start);
+      }
+      // allow indicators to be clickable
+      dots.forEach((d, i)=> d.addEventListener('click', ()=>{ idx = i; setActive(i); }));
+    })();
+  </script>
+</body>
+</html>

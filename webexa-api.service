@@ -1,0 +1,47 @@
+# Systemd service for Webexa AI API (FastAPI + Gunicorn)
+# File: /etc/systemd/system/webexa-api.service
+
+[Unit]
+Description=Webexa AI API Service (FastAPI + Gunicorn)
+Documentation=https://webexa.online
+After=network.target syslog.target
+Wants=webexa-api.service
+
+[Service]
+Type=notify
+User=www-data
+Group=www-data
+
+WorkingDirectory=/var/www/webexa-ai
+Environment="PATH=/var/www/webexa-ai/venv/bin"
+Environment="PYTHONUNBUFFERED=1"
+
+# Start command
+ExecStart=/var/www/webexa-ai/venv/bin/gunicorn \
+    --workers 4 \
+    --worker-class uvicorn.workers.UvicornWorker \
+    --bind 127.0.0.1:8000 \
+    --timeout 300 \
+    --access-logfile /var/log/webexa-api.access.log \
+    --error-logfile /var/log/webexa-api.error.log \
+    --log-level info \
+    agents-ia.main:app
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Process management
+StandardOutput=append:/var/log/webexa-api.log
+StandardError=append:/var/log/webexa-api.error.log
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Performance
+LimitNOFILE=65535
+LimitNPROC=512
+
+[Install]
+WantedBy=multi-user.target

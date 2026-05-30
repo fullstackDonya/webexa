@@ -1,0 +1,7 @@
+2026-05-09 15:18:43 - Début de la requête (AJAX: OUI)
+Données reçues: username=donya, email=donya.bcontact@gmail.com, phone=0651893987
+Validation OK, vérification des doublons
+Pas de doublons, début de l'insertion
+Utilisateur créé avec ID: 1
+Préférences créées, validation de la transaction
+Inscription réussie pour user_id: 1

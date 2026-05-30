@@ -1,0 +1,31 @@
+{
+    "name": "webitech/crm",
+    "description": "CRM Intelligent avec système de gestion email complet",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "php": ">=8.0",
+        "ext-openssl": "*",
+        "ext-pdo": "*",
+        "ext-imap": "*",
+        "ext-mbstring": "*",
+        "ext-curl": "*",
+        "phpmailer/phpmailer": "^6.8"
+    },
+    "autoload": {
+        "psr-4": {
+            "CRM\\": "includes/"
+        }
+    },
+    "scripts": {
+        "test": "php test-email-system.php",
+        "post-install-cmd": [
+            "@php -r \"if (!file_exists('.env')) { echo 'Créez un fichier .env À partir de .env.example'; }\""
+        ]
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true
+    }
+}

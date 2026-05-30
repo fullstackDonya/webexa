@@ -1,0 +1,20 @@
+# Allow access to OAuth callback endpoints
+<Files "*.php">
+    Order allow,deny
+    Allow from all
+</Files>
+
+# Enable PHP execution
+Options +FollowSymLinks
+RewriteEngine On
+
+# Redirect /google/callback to /google/callback.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^google/callback$ google/callback.php [L,QSA]
+
+# Redirect /microsoft/callback to /microsoft/callback.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^microsoft/callback$ microsoft/callback.php [L,QSA]
+

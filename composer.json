@@ -1,0 +1,15 @@
+{
+    "name": "donyab/webexa",
+    "autoload": {
+        "psr-4": {
+            "Donyab\\Webexa\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "donyaSo",
+            "email": "116372643+donyaSo@users.noreply.github.com"
+        }
+    ],
+    "require": {}
+}
