@@ -1,5 +1,10 @@
 <?php
-// voir toutes les erreurs
+/**
+ * Webexa - Unified Authentication & Onboarding Page
+ * Consolidated login, register, and setup-wizard into single elegant interface
+ * Design: Monday.com-inspired (professional, white, clean)
+ */
+
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -8,76 +13,35 @@ session_start();
 require_once __DIR__ . '/crm/config/database.php';
 require_once __DIR__ . '/crm/includes/auth.php';
 
-// Autoriser la page d'accueil (setup wizard) même pour les utilisateurs non authentifiés.
-$isAuthenticated = false;
-$user_id = $_SESSION['user_id'] ?? null;
+// Check if user is already authenticated and onboarded
 if (isAuthenticated()) {
-    $isAuthenticated = true;
-    // Vérification de l'onboarding pour les utilisateurs connectés
-    $stmt = $pdo->prepare("SELECT customer_id, onboarding_completed FROM users WHERE id = ?");
+    $user_id = $_SESSION['user_id'];
+    $stmt = $pdo->prepare("SELECT onboarding_completed FROM users WHERE id = ?");
     $stmt->execute([$user_id]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
+    
     if ($user && $user['onboarding_completed']) {
         header('Location: crm/index.php');
         exit;
     }
-} else {
-    // pas d'utilisateur connecté
-    $user = null;
 }
 
-// Si l'utilisateur est connecté mais que $user n'a pas été récupéré, le récupérer.
-if ($isAuthenticated && empty($user)) {
-    $stmt = $pdo->prepare("SELECT customer_id, onboarding_completed FROM users WHERE id = ?");
-    $stmt->execute([$user_id]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
-}
+// Get mode from request or session
+$mode = $_GET['mode'] ?? $_SESSION['auth_mode'] ?? 'welcome';
+$_SESSION['auth_mode'] = $mode;
 
-// Redirection si onboarding déjà complété (sécurisé)
-if (!empty($user) && !empty($user['onboarding_completed'])) {
-    header('Location: crm/index.php');
-    exit;
-}
+// Prepare OAuth redirect URIs
+$google_oauth_url = '#'; // Será manejado por JavaScript
+$microsoft_oauth_url = '#'; // Será manejado por JavaScript
 
-// Récupérer les données existantes si disponibles
-$customer = null;
-$company = null;
-
-if (!empty($user) && !empty($user['customer_id'])) {
-    $stmt = $pdo->prepare("SELECT * FROM customers WHERE id = ?");
-    $stmt->execute([$user['customer_id']]);
-    $customer = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
-    
-    if ($customer) {
-        $stmt = $pdo->prepare("SELECT * FROM companies WHERE customer_id = ? LIMIT 1");
-        $stmt->execute([$user['customer_id']]);
-        $company = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
-    }
-}
-
-$stmt = $pdo->prepare("SELECT email, first_name, last_name FROM users WHERE id = ?");
-$stmt->execute([$user_id]);
-$userInfo = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
 ?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configuration - Webitech CRM</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <title>Webexa - CRM & ERP Platform</title>
     <style>
-        :root {
-            --primary: #667eea;
-            --primary-dark: #5568d3;
-            --secondary: #764ba2;
-            --success: #10b981;
-            --bg-light: #f8f9fa;
-            --border-color: #e5e7eb;
-        }
-
         * {
             margin: 0;
             padding: 0;
@@ -85,1180 +49,918 @@ $userInfo = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            background: #f7f8fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            display: flex;
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
         }
 
-        .wizard-container {
-            background: white;
-            border-radius: 24px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            width: 100%;
-            max-width: 900px;
-            overflow: hidden;
-        }
-
-        .wizard-header {
+        /* Left Sidebar - Feature Showcase */
+        .sidebar {
+            flex: 1;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 40px;
-            color: white;
-            text-align: center;
-        }
-
-        .wizard-header h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-
-        .wizard-header p {
-            opacity: 0.9;
-            font-size: 1.1rem;
-        }
-
-        .progress-container {
-            background: white;
-            padding: 30px 40px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .progress-steps {
+            padding: 60px 40px;
             display: flex;
+            flex-direction: column;
             justify-content: space-between;
-            position: relative;
-            margin-bottom: 15px;
+            color: white;
         }
 
-        .progress-line {
-            position: absolute;
-            top: 20px;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: var(--border-color);
-            z-index: 0;
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 60px;
+            letter-spacing: -0.5px;
         }
 
-        .progress-line-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
-            transition: width 0.4s ease;
-            border-radius: 3px;
-        }
-
-        .step {
-            position: relative;
-            z-index: 1;
-            text-align: center;
+        .features {
             flex: 1;
         }
 
-        .step-circle {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: white;
-            border: 3px solid var(--border-color);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 8px;
-            font-weight: 600;
-            transition: all 0.3s ease;
+        .feature {
+            margin-bottom: 40px;
         }
 
-        .step.active .step-circle {
-            border-color: var(--primary);
-            background: var(--primary);
-            color: white;
-            transform: scale(1.1);
-        }
-
-        .step.completed .step-circle {
-            border-color: var(--success);
-            background: var(--success);
-            color: white;
-        }
-
-        .step-label {
-            font-size: 0.85rem;
-            color: #6b7280;
-            font-weight: 500;
-        }
-
-        .step.active .step-label {
-            color: var(--primary);
-            font-weight: 600;
-        }
-
-        .wizard-content {
-            padding: 50px;
-            min-height: 450px;
-        }
-
-        .step-content {
-            display: none;
-            animation: fadeIn 0.4s ease;
-        }
-
-        .step-content.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .step-title {
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: #1f2937;
-            margin-bottom: 12px;
-        }
-
-        .step-description {
-            color: #6b7280;
-            margin-bottom: 35px;
-            font-size: 1.05rem;
-        }
-
-        .form-group {
-            margin-bottom: 25px;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #374151;
-            font-size: 0.95rem;
-        }
-
-        .form-label .required {
-            color: #ef4444;
-            margin-left: 3px;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid var(--border-color);
-            border-radius: 12px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-
-        .form-control:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .module-selection {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-top: 25px;
-        }
-
-        .module-card {
-            border: 2px solid var(--border-color);
-            border-radius: 16px;
-            padding: 25px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .module-card:hover {
-            border-color: var(--primary);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15);
-        }
-
-        .module-card.selected {
-            border-color: var(--primary);
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
-        }
-
-        .module-card .checkmark {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            border: 2px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-
-        .module-card.selected .checkmark {
-            background: var(--primary);
-            border-color: var(--primary);
-        }
-
-        .module-card.selected .checkmark i {
-            color: white;
-            font-size: 0.75rem;
-        }
-
-        .module-icon {
+        .feature-icon {
             width: 50px;
             height: 50px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 24px;
             margin-bottom: 15px;
         }
 
-        .module-icon i {
-            font-size: 1.5rem;
-            color: white;
-        }
-
-        .module-name {
-            font-weight: 700;
-            font-size: 1.1rem;
+        .feature h3 {
+            font-size: 18px;
             margin-bottom: 8px;
-            color: #1f2937;
+            font-weight: 600;
         }
 
-        .module-desc {
-            color: #6b7280;
-            font-size: 0.9rem;
+        .feature p {
+            font-size: 14px;
+            opacity: 0.9;
             line-height: 1.5;
         }
 
-        .wizard-actions {
-            padding: 25px 50px;
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #f9fafb;
+        .footer-text {
+            font-size: 13px;
+            opacity: 0.7;
         }
 
-        .btn {
-            padding: 12px 30px;
+        /* Right Panel - Auth Section */
+        .auth-panel {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            background: white;
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .auth-header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .auth-header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* Welcome Screen */
+        .screen.welcome {
+            text-align: center;
+        }
+
+        .welcome-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .welcome-buttons button {
+            flex: 1;
+            padding: 14px;
             border: none;
-            border-radius: 12px;
-            font-size: 1rem;
+            border-radius: 8px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            display: inline-flex;
+        }
+
+        .btn-signin {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-signin:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.2);
+        }
+
+        .btn-signup {
+            background: #f0f1f5;
+            color: #333;
+            border: 2px solid #e0e1e6;
+        }
+
+        .btn-signup:hover {
+            background: #e8e9f0;
+            transform: translateY(-2px);
+        }
+
+        .welcome-text {
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.8;
+        }
+
+        .divider {
+            display: flex;
             align-items: center;
+            margin: 30px 0;
+            color: #999;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e0e1e6;
+        }
+
+        .divider span {
+            padding: 0 12px;
+            font-size: 13px;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #e0e1e6;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* OAuth Buttons */
+        .oauth-buttons {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .oauth-btn {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #e0e1e6;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             gap: 8px;
         }
 
+        .oauth-btn:hover {
+            background: #f7f8fa;
+            border-color: #667eea;
+        }
+
+        /* Wizard Steps */
+        .wizard-steps {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+
+        .step {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #e0e1e6;
+            transition: all 0.3s ease;
+        }
+
+        .step.active {
+            background: #667eea;
+            width: 30px;
+        }
+
+        /* Buttons */
+        .btn {
+            width: 100%;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
         .btn-primary {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            background: #667eea;
             color: white;
         }
 
         .btn-primary:hover {
+            background: #5568d3;
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.2);
+        }
+
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .btn-secondary {
-            background: white;
-            color: #6b7280;
-            border: 2px solid var(--border-color);
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
         }
 
         .btn-secondary:hover {
-            border-color: var(--primary);
-            color: var(--primary);
+            background: rgba(102, 126, 234, 0.05);
         }
 
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .welcome-content {
-            text-align: center;
-            padding: 40px 0;
-        }
-
-        .welcome-icon {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        /* Navigation */
+        .nav-buttons {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 30px;
+            gap: 12px;
+            margin-top: 20px;
         }
 
-        .welcome-icon i {
-            font-size: 4rem;
-            color: white;
+        .nav-buttons button {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #e0e1e6;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #667eea;
+            transition: all 0.3s ease;
         }
 
-        .welcome-list {
-            text-align: left;
-            max-width: 500px;
-            margin: 30px auto;
+        .nav-buttons button:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
         }
 
-        .welcome-item {
-            display: flex;
-            align-items: center;
-            gap: 15px;
+        /* Module Selection */
+        .modules-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
             margin-bottom: 20px;
         }
 
-        .welcome-item-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            background: rgba(102, 126, 234, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--primary);
-        }
-
-        .welcome-item-text h4 {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 4px;
-            color: #1f2937;
-        }
-
-        .welcome-item-text p {
-            font-size: 0.9rem;
-            color: #6b7280;
-            margin: 0;
-        }
-
-        .completion-content {
+        .module-item {
+            padding: 15px;
+            border: 2px solid #e0e1e6;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
             text-align: center;
-            padding: 40px 0;
+            position: relative;
         }
 
-        .completion-icon {
-            width: 120px;
-            height: 120px;
+        .module-item input[type="checkbox"] {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .module-item input[type="checkbox"]:checked + label {
+            color: #667eea;
+        }
+
+        .module-item.selected {
+            background: rgba(102, 126, 234, 0.05);
+            border-color: #667eea;
+        }
+
+        .module-item label {
+            cursor: pointer;
+            display: block;
+            font-weight: 600;
+        }
+
+        /* Error/Success Messages */
+        .message {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .message.error {
+            background: #fee;
+            color: #c33;
+            border: 1px solid #fcc;
+        }
+
+        .message.success {
+            background: #efe;
+            color: #3c3;
+            border: 1px solid #cfc;
+        }
+
+        .message.info {
+            background: #eef;
+            color: #33c;
+            border: 1px solid #ccf;
+        }
+
+        /* Loading State */
+        .loading {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
             border-radius: 50%;
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 30px;
-            animation: scaleIn 0.5s ease;
+            animation: spin 1s linear infinite;
         }
 
-        .completion-icon i {
-            font-size: 4rem;
-            color: white;
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
-        @keyframes scaleIn {
-            from {
-                transform: scale(0);
+        /* Hidden screens */
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .sidebar {
+                flex: 0.8;
             }
-            to {
-                transform: scale(1);
-            }
-        }
-
-        .summary-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
-            margin: 30px 0;
-            text-align: left;
-        }
-
-        .summary-card {
-            background: #f9fafb;
-            border-radius: 12px;
-            padding: 20px;
-        }
-
-        .summary-card h4 {
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            color: #6b7280;
-            margin-bottom: 12px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-        }
-
-        .summary-card .value {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #1f2937;
-            margin-bottom: 5px;
-        }
-
-        .summary-card .sub-value {
-            font-size: 0.9rem;
-            color: #6b7280;
-        }
-
-        .alert {
-            padding: 15px 20px;
-            border-radius: 12px;
-            margin-bottom: 25px;
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-        }
-
-        .alert-info {
-            background: rgba(59, 130, 246, 0.1);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            color: #1e40af;
-        }
-
-        .alert-icon {
-            flex-shrink: 0;
-            margin-top: 2px;
         }
 
         @media (max-width: 768px) {
-            .wizard-content {
-                padding: 30px;
+            .container {
+                flex-direction: column;
             }
 
-            .wizard-actions {
-                padding: 20px 30px;
+            .sidebar {
+                padding: 40px 30px;
+                min-height: auto;
             }
 
-            .form-row {
+            .feature {
+                margin-bottom: 30px;
+            }
+
+            .auth-panel {
+                padding: 30px 20px;
+                min-height: auto;
+            }
+
+            .modules-grid {
                 grid-template-columns: 1fr;
-            }
-
-            .summary-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .progress-container {
-                padding: 20px;
-            }
-
-            .step-label {
-                font-size: 0.75rem;
             }
         }
 
-        .skip-link {
-            color: #6b7280;
-            text-decoration: none;
-            font-size: 0.9rem;
+        /* Help text */
+        .form-help {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        .back-link {
+            color: #667eea;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: inline-block;
             transition: color 0.3s ease;
         }
 
-        .skip-link:hover {
-            color: var(--primary);
+        .back-link:hover {
+            color: #5568d3;
         }
     </style>
 </head>
 <body>
-    <div class="wizard-container">
-        <div class="wizard-header">
-            <h1><i class="fas fa-rocket"></i> Bienvenue sur Webitech</h1>
-            <p>Configurons votre espace en quelques étapes simples</p>
-        </div>
-
-        <div class="progress-container">
-            <div class="progress-steps">
-                <div class="progress-line">
-                    <div class="progress-line-fill" id="progressFill" style="width: 0%"></div>
-                </div>
-                <div class="step active" data-step="1">
-                    <div class="step-circle">1</div>
-                    <div class="step-label">Bienvenue</div>
-                </div>
-                <div class="step" data-step="2">
-                    <div class="step-circle">2</div>
-                    <div class="step-label">Votre Profil</div>
-                </div>
-                <div class="step" data-step="3">
-                    <div class="step-circle">3</div>
-                    <div class="step-label">Entreprise</div>
-                </div>
-                <div class="step" data-step="4">
-                    <div class="step-circle">4</div>
-                    <div class="step-label">Modules</div>
-                </div>
-                <div class="step" data-step="5">
-                    <div class="step-circle">5</div>
-                    <div class="step-label">Finalisation</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="wizard-content">
-            <!-- Étape 1: Bienvenue -->
-            <div class="step-content active" data-step="1">
-                <div class="welcome-content">
-                    <div class="welcome-icon">
-                        <i class="fas fa-hand-sparkles"></i>
-                    </div>
-                    <h2 class="step-title">Bienvenue <?= htmlspecialchars($userInfo['first_name'] ?? '') ?> !</h2>
-                    <p class="step-description">Prenez quelques minutes pour configurer votre espace de travail</p>
-                    
-                    <div class="welcome-list">
-                        <div class="welcome-item">
-                            <div class="welcome-item-icon">
-                                <i class="fas fa-user-circle"></i>
-                            </div>
-                            <div class="welcome-item-text">
-                                <h4>Configuration du profil</h4>
-                                <p>Vos informations personnelles et professionnelles</p>
-                            </div>
-                        </div>
-                        <div class="welcome-item">
-                            <div class="welcome-item-icon">
-                                <i class="fas fa-building"></i>
-                            </div>
-                            <div class="welcome-item-text">
-                                <h4>Paramètres d'entreprise</h4>
-                                <p>Les détails de votre organisation</p>
-                            </div>
-                        </div>
-                        <div class="welcome-item">
-                            <div class="welcome-item-icon">
-                                <i class="fas fa-puzzle-piece"></i>
-                            </div>
-                            <div class="welcome-item-text">
-                                <h4>Sélection des modules</h4>
-                                <p>CRM, ERP, et autres outils disponibles</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Étape 2: Profil Client -->
-            <div class="step-content" data-step="2">
-                <h2 class="step-title">Votre Profil</h2>
-                <p class="step-description">Complétez vos informations personnelles</p>
-
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle alert-icon"></i>
-                    <div>Ces informations seront utilisées pour personnaliser votre expérience et faciliter la communication.</div>
-                </div>
-
-                <form id="profileForm">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">Prénom <span class="required">*</span></label>
-                            <input type="text" class="form-control" name="first_name" value="<?= htmlspecialchars($userInfo['first_name'] ?? '') ?>" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Nom <span class="required">*</span></label>
-                            <input type="text" class="form-control" name="last_name" value="<?= htmlspecialchars($userInfo['last_name'] ?? '') ?>" required>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Email <span class="required">*</span></label>
-                        <input type="email" class="form-control" name="email" value="<?= htmlspecialchars($customer['email'] ?? $userInfo['email'] ?? '') ?>" required>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">Téléphone</label>
-                            <input type="tel" class="form-control" name="phone" value="<?= htmlspecialchars($customer['phone'] ?? '') ?>" placeholder="+33 6 12 34 56 78">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Poste/Fonction</label>
-                            <input type="text" class="form-control" name="position" value="<?= htmlspecialchars($customer['position'] ?? '') ?>" placeholder="Ex: Directeur Commercial">
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Adresse</label>
-                        <input type="text" class="form-control" name="address" value="<?= htmlspecialchars($customer['address'] ?? '') ?>" placeholder="Adresse complète">
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">Ville</label>
-                            <input type="text" class="form-control" name="city" value="<?= htmlspecialchars($customer['city'] ?? '') ?>">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Code Postal</label>
-                            <input type="text" class="form-control" name="postal_code" value="<?= htmlspecialchars($customer['postal_code'] ?? '') ?>">
-                        </div>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Étape 3: Entreprise -->
-            <div class="step-content" data-step="3">
-                <h2 class="step-title">Votre Entreprise</h2>
-                <p class="step-description">Informations sur votre organisation</p>
-
-                <div class="alert alert-info">
-                    <i class="fas fa-magic alert-icon"></i>
-                    <div>Ces informations seront automatiquement synchronisées avec votre profil d'entreprise dans le système.</div>
-                </div>
-
-                <form id="companyForm">
-                    <div class="form-group">
-                        <label class="form-label">Nom de l'entreprise <span class="required">*</span></label>
-                        <input type="text" class="form-control" name="company_name" value="<?= htmlspecialchars($company['name'] ?? $customer['name'] ?? '') ?>" required placeholder="Ex: ACME Corporation">
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">SIRET/SIREN</label>
-                            <input type="text" class="form-control" name="siret" value="<?= htmlspecialchars($company['siret'] ?? '') ?>" placeholder="123 456 789 00012">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">TVA Intracommunautaire</label>
-                            <input type="text" class="form-control" name="vat_number" value="<?= htmlspecialchars($company['vat_number'] ?? '') ?>" placeholder="FR12345678901">
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Site Web</label>
-                        <input type="url" class="form-control" name="website" value="<?= htmlspecialchars($company['website'] ?? '') ?>" placeholder="https://www.exemple.com">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Secteur d'activité</label>
-                        <select class="form-control" name="industry">
-                            <option value="">Sélectionnez un secteur</option>
-                            <option value="technology" <?= ($company['industry'] ?? '') === 'technology' ? 'selected' : '' ?>>Technologies</option>
-                            <option value="finance" <?= ($company['industry'] ?? '') === 'finance' ? 'selected' : '' ?>>Finance</option>
-                            <option value="healthcare" <?= ($company['industry'] ?? '') === 'healthcare' ? 'selected' : '' ?>>Santé</option>
-                            <option value="retail" <?= ($company['industry'] ?? '') === 'retail' ? 'selected' : '' ?>>Commerce</option>
-                            <option value="manufacturing" <?= ($company['industry'] ?? '') === 'manufacturing' ? 'selected' : '' ?>>Industrie</option>
-                            <option value="services" <?= ($company['industry'] ?? '') === 'services' ? 'selected' : '' ?>>Services</option>
-                            <option value="education" <?= ($company['industry'] ?? '') === 'education' ? 'selected' : '' ?>>Éducation</option>
-                            <option value="other" <?= ($company['industry'] ?? '') === 'other' ? 'selected' : '' ?>>Autre</option>
-                        </select>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">Nombre d'employés</label>
-                            <select class="form-control" name="employee_count">
-                                <option value="">Sélectionnez</option>
-                                <option value="1-10" <?= ($company['employee_count'] ?? '') === '1-10' ? 'selected' : '' ?>>1-10</option>
-                                <option value="11-50" <?= ($company['employee_count'] ?? '') === '11-50' ? 'selected' : '' ?>>11-50</option>
-                                <option value="51-200" <?= ($company['employee_count'] ?? '') === '51-200' ? 'selected' : '' ?>>51-200</option>
-                                <option value="201-500" <?= ($company['employee_count'] ?? '') === '201-500' ? 'selected' : '' ?>>201-500</option>
-                                <option value="501+" <?= ($company['employee_count'] ?? '') === '501+' ? 'selected' : '' ?>>500+</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Chiffre d'affaires annuel</label>
-                            <select class="form-control" name="annual_revenue">
-                                <option value="">Sélectionnez</option>
-                                <option value="0-100k">0 - 100K €</option>
-                                <option value="100k-500k">100K - 500K €</option>
-                                <option value="500k-1m">500K - 1M €</option>
-                                <option value="1m-5m">1M - 5M €</option>
-                                <option value="5m+">5M+ €</option>
-                            </select>
-                        </div>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Étape 4: Modules -->
-            <div class="step-content" data-step="4">
-                <h2 class="step-title">Sélectionnez vos Modules</h2>
-                <p class="step-description">Choisissez les outils dont vous avez besoin</p>
-
-                <div class="module-selection">
-                    <div class="module-card selected" data-module="crm">
-                        <div class="checkmark"><i class="fas fa-check"></i></div>
-                        <div class="module-icon">
-                            <i class="fas fa-users"></i>
-                        </div>
-                        <div class="module-name">CRM</div>
-                        <div class="module-desc">Gestion de la relation client, leads, opportunités et pipeline de vente</div>
-                    </div>
-
-                    <div class="module-card" data-module="erp">
-                        <div class="checkmark"></div>
-                        <div class="module-icon">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        <div class="module-name">ERP</div>
-                        <div class="module-desc">Gestion des ressources, comptabilité, factures et missions</div>
-                    </div>
-
-                    <div class="module-card" data-module="projects">
-                        <div class="checkmark"></div>
-                        <div class="module-icon">
-                            <i class="fas fa-tasks"></i>
-                        </div>
-                        <div class="module-name">Projets</div>
-                        <div class="module-desc">Gestion de projets, tâches et collaboration d'équipe</div>
-                    </div>
-
-                    <div class="module-card" data-module="marketing">
-                        <div class="checkmark"></div>
-                        <div class="module-icon">
-                            <i class="fas fa-bullhorn"></i>
-                        </div>
-                        <div class="module-name">Marketing</div>
-                        <div class="module-desc">Campagnes email, automation et analytics marketing</div>
-                    </div>
-
-                    <div class="module-card" data-module="support">
-                        <div class="checkmark"></div>
-                        <div class="module-icon">
-                            <i class="fas fa-headset"></i>
-                        </div>
-                        <div class="module-name">Support</div>
-                        <div class="module-desc">Service client, tickets et base de connaissances</div>
-                    </div>
-
-                    <div class="module-card" data-module="analytics">
-                        <div class="checkmark"></div>
-                        <div class="module-icon">
-                            <i class="fas fa-chart-pie"></i>
-                        </div>
-                        <div class="module-name">Analytics</div>
-                        <div class="module-desc">Tableaux de bord et rapports avancés avec IA</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Étape 5: Récapitulatif -->
-            <div class="step-content" data-step="5">
-                <div class="completion-content">
-                    <div class="completion-icon">
-                        <i class="fas fa-check"></i>
-                    </div>
-                    <h2 class="step-title">Prêt à commencer !</h2>
-                    <p class="step-description">Voici un récapitulatif de votre configuration</p>
-
-                    <div class="summary-grid">
-                        <div class="summary-card">
-                            <h4>Votre Profil</h4>
-                            <div class="value" id="summaryName">-</div>
-                            <div class="sub-value" id="summaryEmail">-</div>
-                            <div class="sub-value" id="summaryPhone">-</div>
-                        </div>
-
-                        <?php if (!($isAuthenticated ?? false)): ?>
-                        <div id="finalAuthOptions" style="text-align:center; margin-top:20px;">
-                            <p style="color:#6b7280; margin-bottom:12px; font-weight:600;">Pour finaliser, connectez-vous ou créez un compte :</p>
-                            <style>
-                                .auth-actions { display:flex; gap:12px; justify-content:center; align-items:center; }
-                                .btn-google { background: #fff; color:#202124; border:1px solid #dadce0; border-radius:8px; padding:10px 14px; display:inline-flex; align-items:center; gap:10px; box-shadow:0 1px 2px rgba(0,0,0,0.04); }
-                                .btn-google:hover { box-shadow:0 4px 12px rgba(66,133,244,0.12); }
-                                .btn-email { background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color:#fff; border-radius:8px; padding:10px 14px; border:none; }
-                                .email-form { margin-top:16px; max-width:420px; margin-left:auto; margin-right:auto; text-align:left; display:none; }
-                                .email-form .form-control { border-radius:8px; padding:8px 12px; }
-                                .auth-note { color:#6b7280; font-size:0.95rem; margin-top:10px; }
-                                .auth-toggle { background:none;border:none;color:var(--primary);cursor:pointer;font-weight:700 }
-                            </style>
-
-                            <div class="auth-actions">
-                                <button id="googleBtn" class="btn-google" type="button" title="Se connecter avec Google">
-                                    <!-- Google logo SVG -->
-                                    <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><path d="M17.64 9.2c0-.63-.06-1.24-.17-1.82H9v3.44h4.84c-.21 1.14-.86 2.1-1.83 2.75v2.28h2.96c1.73-1.59 2.73-3.95 2.73-6.65z" fill="#4285F4"/><path d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.96-2.28c-.82.55-1.87.88-3  .88-2.3 0-4.25-1.55-4.95-3.63H1.98v2.28C3.45 15.9 6.03 18 9 18z" fill="#34A853"/><path d="M4.05 10.79c-.18-.55-.29-1.14-.29-1.79s.11-1.24.29-1.79V4.93H1.98A8.99 8.99 0 0 0 0 9c0 1.47.36 2.86 1 4.07l3.05-2.28z" fill="#FBBC05"/><path d="M9 3.56c1.32 0 2.5.45 3.43 1.33l2.57-2.57C13.47.99 11.43 0 9 0 6.03 0 3.45 2.1 1.98 4.93l3.05 2.28C4.75 5.11 6.7 3.56 9 3.56z" fill="#EA4335"/></g></svg>
-                                    <span style="font-weight:600;">Se connecter avec Google</span>
-                                </button>
-
-                                <button id="emailBtn" class="btn-email" type="button">S'inscrire / Se connecter par e-mail</button>
-                            </div>
-
-                            <div id="emailForm" class="email-form">
-                                <form id="inlineEmailForm">
-                                    <input type="hidden" name="mode" id="authMode" value="login">
-                                    <div class="form-group">
-                                        <label class="form-label">Adresse e-mail</label>
-                                        <input class="form-control" type="email" name="email" required />
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="form-label">Mot de passe</label>
-                                        <input class="form-control" type="password" name="password" required />
-                                    </div>
-                                    <div style="display:flex; gap:10px; justify-content:flex-end; align-items:center; margin-top:10px;">
-                                        <button type="button" id="switchMode" class="auth-toggle">Créer un compte</button>
-                                        <button type="submit" class="btn btn-primary" id="submitEmailBtn">Se connecter</button>
-                                    </div>
-                                </form>
-                                <div class="auth-note">En continuant, vous acceptez nos conditions. Vous pouvez également utiliser Google.</div>
-                            </div>
-                        </div>
-                        <?php endif; ?>
-                        <div class="summary-card">
-                            <h4>Entreprise</h4>
-                            <div class="value" id="summaryCompany">-</div>
-                            <div class="sub-value" id="summaryIndustry">-</div>
-                            <div class="sub-value" id="summaryEmployees">-</div>
-                        </div>
-
-                        <div class="summary-card" style="grid-column: 1 / -1;">
-                            <h4>Modules Activés</h4>
-                            <div id="summaryModules" class="value">-</div>
-                        </div>
-                    </div>
-
-                    <div class="alert alert-info">
-                        <i class="fas fa-lightbulb alert-icon"></i>
-                        <div>Vous pourrez modifier ces paramètres à tout moment dans la section Paramètres.</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="wizard-actions">
+    <div class="container">
+        <!-- Left Sidebar -->
+        <div class="sidebar">
             <div>
-                <button type="button" class="btn btn-secondary" id="btnPrevious" style="display: none;">
-                    <i class="fas fa-arrow-left"></i> Précédent
-                </button>
+                <div class="logo">🚀 Webexa</div>
+                <div class="features">
+                    <div class="feature">
+                        <div class="feature-icon">📊</div>
+                        <h3>CRM Puissant</h3>
+                        <p>Gérez vos contacts, leads et opportunités de vente en toute facilité</p>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">⚙️</div>
+                        <h3>ERP Complet</h3>
+                        <p>Automatisez vos processus métier et optimisez vos opérations</p>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">🤖</div>
+                        <h3>IA Avancée</h3>
+                        <p>Analysez vos données et obtenez des insights intelligents</p>
+                    </div>
+                </div>
             </div>
-            <div style="display: flex; gap: 15px; align-items: center;">
-                <a href="#" class="skip-link" id="skipLink">Passer pour l'instant</a>
-                <button type="button" class="btn btn-primary" id="btnNext">
-                    Suivant <i class="fas fa-arrow-right"></i>
-                </button>
+            <div class="footer-text">
+                © 2024 Webexa. Tous droits réservés.
+            </div>
+        </div>
+
+        <!-- Right Auth Panel -->
+        <div class="auth-panel">
+            <div class="auth-container">
+                <!-- WELCOME SCREEN -->
+                <div class="screen welcome active">
+                    <div class="auth-header">
+                        <h1>Bienvenue</h1>
+                        <p>Commencez à gérer votre entreprise avec Webexa</p>
+                    </div>
+
+                    <div class="welcome-text">
+                        <p>Webexa est une plateforme complète de gestion d'entreprise combinant CRM, ERP et intelligence artificielle.</p>
+                    </div>
+
+                    <div class="welcome-buttons">
+                        <button class="btn-signin" onclick="switchScreen('login')">Se connecter</button>
+                        <button class="btn-signup" onclick="switchScreen('signup-step1')">S'inscrire</button>
+                    </div>
+
+                    <div class="divider">
+                        <span>ou</span>
+                    </div>
+
+                    <div class="oauth-buttons">
+                        <button class="oauth-btn" onclick="loginWithGoogle()">
+                            <span>🔵</span> Google
+                        </button>
+                        <button class="oauth-btn" onclick="loginWithMicrosoft()">
+                            <span>🟦</span> Microsoft
+                        </button>
+                    </div>
+                </div>
+
+                <!-- LOGIN SCREEN -->
+                <div class="screen login">
+                    <div onclick="switchScreen('welcome')" class="back-link">← Retour</div>
+                    <div class="auth-header">
+                        <h1>Se connecter</h1>
+                        <p>Accédez à votre compte Webexa</p>
+                    </div>
+
+                    <div id="login-message"></div>
+
+                    <form id="login-form" onsubmit="handleLogin(event)">
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" name="email" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Mot de passe</label>
+                            <input type="password" name="password" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Connexion</button>
+                    </form>
+
+                    <div style="text-align: center; margin-top: 20px;">
+                        <span style="color: #999; font-size: 14px;">Pas encore de compte? </span>
+                        <a href="#" onclick="switchScreen('signup-step1'); return false;" style="color: #667eea; font-weight: 600; text-decoration: none;">S'inscrire</a>
+                    </div>
+                </div>
+
+                <!-- SIGNUP STEP 1: Account -->
+                <div class="screen signup-step1">
+                    <div class="wizard-steps">
+                        <div class="step active"></div>
+                        <div class="step"></div>
+                        <div class="step"></div>
+                    </div>
+
+                    <div class="auth-header">
+                        <h1>Créer un compte</h1>
+                        <p>Étape 1 sur 3 - Vos informations personnelles</p>
+                    </div>
+
+                    <div id="signup-message"></div>
+
+                    <form id="signup-form-step1" onsubmit="handleSignupStep1(event)">
+                        <div class="form-group">
+                            <label>Prénom</label>
+                            <input type="text" name="first_name" id="first_name" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Nom</label>
+                            <input type="text" name="last_name" id="last_name" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" name="email" id="signup_email" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Mot de passe</label>
+                            <input type="password" name="password" id="signup_password" required>
+                            <div class="form-help">Au moins 8 caractères</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Confirmer le mot de passe</label>
+                            <input type="password" name="password_confirm" id="password_confirm" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Poste</label>
+                            <input type="text" name="position" id="position">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Téléphone</label>
+                            <input type="tel" name="phone" id="phone">
+                        </div>
+
+                        <div class="nav-buttons">
+                            <button type="button" class="btn btn-secondary" onclick="switchScreen('welcome')">Annuler</button>
+                            <button type="submit" class="btn btn-primary">Suivant</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- SIGNUP STEP 2: Company -->
+                <div class="screen signup-step2">
+                    <div class="wizard-steps">
+                        <div class="step"></div>
+                        <div class="step active"></div>
+                        <div class="step"></div>
+                    </div>
+
+                    <div class="auth-header">
+                        <h1>Votre entreprise</h1>
+                        <p>Étape 2 sur 3 - Informations de l'entreprise</p>
+                    </div>
+
+                    <form id="signup-form-step2" onsubmit="handleSignupStep2(event)">
+                        <div class="form-group">
+                            <label>Nom de l'entreprise</label>
+                            <input type="text" name="company_name" id="company_name" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>SIRET (optionnel)</label>
+                            <input type="text" name="siret" id="siret">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Numéro TVA (optionnel)</label>
+                            <input type="text" name="vat_number" id="vat_number">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Site web (optionnel)</label>
+                            <input type="url" name="website" id="website">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Secteur d'activité</label>
+                            <select name="industry" id="industry" required>
+                                <option value="">-- Sélectionner --</option>
+                                <option value="Technology">Technologie</option>
+                                <option value="Finance">Finance</option>
+                                <option value="Healthcare">Santé</option>
+                                <option value="Retail">Commerce</option>
+                                <option value="Manufacturing">Fabrication</option>
+                                <option value="Services">Services</option>
+                                <option value="Other">Autre</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Nombre d'employés</label>
+                            <select name="employee_count" id="employee_count">
+                                <option value="">-- Sélectionner --</option>
+                                <option value="1-10">1-10</option>
+                                <option value="11-50">11-50</option>
+                                <option value="51-200">51-200</option>
+                                <option value="201-1000">201-1000</option>
+                                <option value="1000+">1000+</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Chiffre d'affaires annuel (optionnel)</label>
+                            <input type="text" name="annual_revenue" id="annual_revenue">
+                        </div>
+
+                        <div class="nav-buttons">
+                            <button type="button" class="btn btn-secondary" onclick="switchScreen('signup-step1')">Précédent</button>
+                            <button type="submit" class="btn btn-primary">Suivant</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- SIGNUP STEP 3: Modules -->
+                <div class="screen signup-step3">
+                    <div class="wizard-steps">
+                        <div class="step"></div>
+                        <div class="step"></div>
+                        <div class="step active"></div>
+                    </div>
+
+                    <div class="auth-header">
+                        <h1>Sélectionnez vos modules</h1>
+                        <p>Étape 3 sur 3 - Choisissez les fonctionnalités dont vous avez besoin</p>
+                    </div>
+
+                    <form id="signup-form-step3" onsubmit="handleSignupStep3(event)">
+                        <div class="modules-grid">
+                            <div class="module-item selected" onclick="toggleModule(this, 'crm')">
+                                <input type="checkbox" name="modules" value="crm" checked id="module-crm">
+                                <label for="module-crm">📊 CRM</label>
+                            </div>
+                            <div class="module-item" onclick="toggleModule(this, 'erp')">
+                                <input type="checkbox" name="modules" value="erp" id="module-erp">
+                                <label for="module-erp">⚙️ ERP</label>
+                            </div>
+                            <div class="module-item" onclick="toggleModule(this, 'projects')">
+                                <input type="checkbox" name="modules" value="projects" id="module-projects">
+                                <label for="module-projects">📈 Projets</label>
+                            </div>
+                            <div class="module-item" onclick="toggleModule(this, 'marketing')">
+                                <input type="checkbox" name="modules" value="marketing" id="module-marketing">
+                                <label for="module-marketing">📣 Marketing</label>
+                            </div>
+                            <div class="module-item" onclick="toggleModule(this, 'support')">
+                                <input type="checkbox" name="modules" value="support" id="module-support">
+                                <label for="module-support">💬 Support</label>
+                            </div>
+                            <div class="module-item" onclick="toggleModule(this, 'analytics')">
+                                <input type="checkbox" name="modules" value="analytics" id="module-analytics">
+                                <label for="module-analytics">📉 Analytics</label>
+                            </div>
+                        </div>
+
+                        <div id="signup-step3-message"></div>
+
+                        <div class="nav-buttons">
+                            <button type="button" class="btn btn-secondary" onclick="switchScreen('signup-step2')">Précédent</button>
+                            <button type="submit" class="btn btn-primary" id="btn-finish">Terminer</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        const IS_AUTHENTICATED = <?php echo ($isAuthenticated ? 'true' : 'false'); ?>;
-        let currentStep = 1;
-        const totalSteps = 5;
-        let wizardData = {
-            profile: {},
-            company: {},
-            modules: ['crm']
-        };
-
-        // Navigation
-        function updateUI() {
-            // Update steps
-            document.querySelectorAll('.step').forEach(step => {
-                const stepNum = parseInt(step.dataset.step);
-                step.classList.remove('active', 'completed');
-                
-                if (stepNum < currentStep) {
-                    step.classList.add('completed');
-                } else if (stepNum === currentStep) {
-                    step.classList.add('active');
-                }
+        // Screen navigation
+        function switchScreen(screenName) {
+            document.querySelectorAll('.screen').forEach(el => {
+                el.classList.remove('active');
             });
+            document.querySelector(`.${screenName}`).classList.add('active');
+        }
 
-            // Update progress bar
-            const progress = ((currentStep - 1) / (totalSteps - 1)) * 100;
-            document.getElementById('progressFill').style.width = progress + '%';
+        // Module toggle
+        function toggleModule(element, moduleName) {
+            element.classList.toggle('selected');
+            const checkbox = element.querySelector('input[type="checkbox"]');
+            checkbox.checked = !checkbox.checked;
+        }
 
-            // Update content
-            document.querySelectorAll('.step-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            document.querySelector(`[data-step="${currentStep}"].step-content`).classList.add('active');
-
-            // Update buttons
-            document.getElementById('btnPrevious').style.display = currentStep > 1 ? 'inline-flex' : 'none';
+        // Handle login
+        async function handleLogin(e) {
+            e.preventDefault();
+            const formData = new FormData(document.getElementById('login-form'));
             
-            const btnNext = document.getElementById('btnNext');
-            if (currentStep === totalSteps) {
-                if (IS_AUTHENTICATED) {
-                    btnNext.style.display = 'inline-flex';
-                    btnNext.innerHTML = '<i class="fas fa-check"></i> Terminer';
-                } else {
-                    // cacher le bouton principal si l'utilisateur n'est pas connecté
-                    btnNext.style.display = 'none';
-                }
-            } else {
-                btnNext.style.display = 'inline-flex';
-                btnNext.innerHTML = 'Suivant <i class="fas fa-arrow-right"></i>';
-            }
-
-            // Skip link
-            const skipLink = document.getElementById('skipLink');
-            skipLink.style.display = currentStep === totalSteps ? 'none' : 'inline';
-
-            // Update summary on last step
-            if (currentStep === totalSteps) {
-                updateSummary();
-            }
-        }
-
-        function nextStep() {
-            if (currentStep < totalSteps) {
-                // Validate current step
-                if (!validateStep(currentStep)) {
-                    return;
-                }
-                
-                // Save data
-                saveStepData(currentStep);
-                
-                currentStep++;
-                updateUI();
-            } else {
-                // Final submission
-                submitWizard();
-            }
-        }
-
-        function previousStep() {
-            if (currentStep > 1) {
-                currentStep--;
-                updateUI();
-            }
-        }
-
-        function validateStep(step) {
-            if (step === 2) {
-                const form = document.getElementById('profileForm');
-                if (!form.checkValidity()) {
-                    form.reportValidity();
-                    return false;
-                }
-            } else if (step === 3) {
-                const form = document.getElementById('companyForm');
-                const companyName = form.querySelector('[name="company_name"]').value.trim();
-                if (!companyName) {
-                    alert('Le nom de l\'entreprise est requis');
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        function saveStepData(step) {
-            if (step === 2) {
-                const form = document.getElementById('profileForm');
-                const formData = new FormData(form);
-                wizardData.profile = Object.fromEntries(formData.entries());
-            } else if (step === 3) {
-                const form = document.getElementById('companyForm');
-                const formData = new FormData(form);
-                wizardData.company = Object.fromEntries(formData.entries());
-            }
-        }
-
-        function updateSummary() {
-            // Profile
-            document.getElementById('summaryName').textContent = 
-                `${wizardData.profile.first_name || ''} ${wizardData.profile.last_name || ''}`.trim() || '-';
-            document.getElementById('summaryEmail').textContent = wizardData.profile.email || '-';
-            document.getElementById('summaryPhone').textContent = wizardData.profile.phone || '-';
-
-            // Company
-            document.getElementById('summaryCompany').textContent = wizardData.company.company_name || '-';
-            
-            const industries = {
-                'technology': 'Technologies',
-                'finance': 'Finance',
-                'healthcare': 'Santé',
-                'retail': 'Commerce',
-                'manufacturing': 'Industrie',
-                'services': 'Services',
-                'education': 'Éducation',
-                'other': 'Autre'
-            };
-            document.getElementById('summaryIndustry').textContent = 
-                industries[wizardData.company.industry] || '-';
-            document.getElementById('summaryEmployees').textContent = 
-                wizardData.company.employee_count ? `${wizardData.company.employee_count} employés` : '-';
-
-            // Modules
-            const moduleNames = {
-                'crm': 'CRM',
-                'erp': 'ERP',
-                'projects': 'Projets',
-                'marketing': 'Marketing',
-                'support': 'Support',
-                'analytics': 'Analytics'
-            };
-            const moduleList = wizardData.modules.map(m => moduleNames[m]).join(', ');
-            document.getElementById('summaryModules').textContent = moduleList || '-';
-        }
-
-        async function submitWizard() {
-            const btnNext = document.getElementById('btnNext');
-            btnNext.disabled = true;
-            btnNext.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Configuration...';
-
             try {
-                if (!IS_AUTHENTICATED) {
-                    // Rediriger les utilisateurs non authentifiés vers l'inscription
-                    window.location.href = 'register.php';
-                    return;
+                const response = await fetch('crm/api/auth/login.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    window.location.href = 'crm/index.php';
+                } else {
+                    showMessage('login-message', data.message || 'Erreur de connexion', 'error');
                 }
-                const response = await fetch('api/setup-wizard.php', {
+            } catch (error) {
+                showMessage('login-message', 'Erreur: ' + error.message, 'error');
+            }
+        }
+
+        // Handle signup step 1
+        async function handleSignupStep1(e) {
+            e.preventDefault();
+            
+            const password = document.getElementById('signup_password').value;
+            const confirmPassword = document.getElementById('password_confirm').value;
+            
+            if (password !== confirmPassword) {
+                showMessage('signup-message', 'Les mots de passe ne correspondent pas', 'error');
+                return;
+            }
+            
+            if (password.length < 8) {
+                showMessage('signup-message', 'Le mot de passe doit contenir au moins 8 caractères', 'error');
+                return;
+            }
+            
+            const formData = new FormData(document.getElementById('signup-form-step1'));
+            
+            try {
+                const response = await fetch('crm/api/auth/register.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Store user data for next step
+                    sessionStorage.setItem('signup_data', JSON.stringify({
+                        first_name: formData.get('first_name'),
+                        last_name: formData.get('last_name'),
+                        email: formData.get('email'),
+                        phone: formData.get('phone'),
+                        position: formData.get('position')
+                    }));
+                    
+                    switchScreen('signup-step2');
+                } else {
+                    showMessage('signup-message', data.message || 'Erreur lors de l\'inscription', 'error');
+                }
+            } catch (error) {
+                showMessage('signup-message', 'Erreur: ' + error.message, 'error');
+            }
+        }
+
+        // Handle signup step 2
+        function handleSignupStep2(e) {
+            e.preventDefault();
+            
+            const companyData = {
+                company_name: document.getElementById('company_name').value,
+                siret: document.getElementById('siret').value,
+                vat_number: document.getElementById('vat_number').value,
+                website: document.getElementById('website').value,
+                industry: document.getElementById('industry').value,
+                employee_count: document.getElementById('employee_count').value,
+                annual_revenue: document.getElementById('annual_revenue').value
+            };
+            
+            // Store company data
+            sessionStorage.setItem('company_data', JSON.stringify(companyData));
+            
+            switchScreen('signup-step3');
+        }
+
+        // Handle signup step 3 - Final
+        async function handleSignupStep3(e) {
+            e.preventDefault();
+            
+            const signupData = JSON.parse(sessionStorage.getItem('signup_data') || '{}');
+            const companyData = JSON.parse(sessionStorage.getItem('company_data') || '{}');
+            
+            const modules = Array.from(document.querySelectorAll('input[name="modules"]:checked'))
+                .map(el => el.value);
+            
+            if (!modules.includes('crm')) {
+                modules.push('crm'); // CRM always required
+            }
+            
+            const btn = document.getElementById('btn-finish');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span>';
+            
+            try {
+                // Call complete setup API
+                const response = await fetch('crm/api/auth/complete-setup.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(wizardData)
+                    body: JSON.stringify({
+                        profile: signupData,
+                        company: companyData,
+                        modules: modules
+                    })
                 });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    window.location.href = 'crm/index.php';
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage('signup-step3-message', 'Inscription réussie! Redirection...', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'crm/index.php';
+                    }, 1500);
                 } else {
-                    alert('Erreur: ' + (result.message || 'Erreur lors de la configuration'));
-                    btnNext.disabled = false;
-                    btnNext.innerHTML = '<i class="fas fa-check"></i> Terminer';
+                    showMessage('signup-step3-message', data.message || 'Erreur lors de la configuration', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = 'Terminer';
                 }
             } catch (error) {
-                console.error('Error:', error);
-                alert('Erreur lors de la configuration');
-                btnNext.disabled = false;
-                btnNext.innerHTML = '<i class="fas fa-check"></i> Terminer';
+                showMessage('signup-step3-message', 'Erreur: ' + error.message, 'error');
+                btn.disabled = false;
+                btn.innerHTML = 'Terminer';
             }
         }
 
-        // Event listeners
-        document.getElementById('btnNext').addEventListener('click', nextStep);
-        document.getElementById('btnPrevious').addEventListener('click', previousStep);
+        // Show message
+        function showMessage(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="message ${type}">${message}</div>`;
+        }
 
-        document.getElementById('skipLink').addEventListener('click', (e) => {
-            e.preventDefault();
-            if (confirm('Êtes-vous sûr de vouloir passer cette étape ? Vous pourrez compléter ces informations plus tard dans les paramètres.')) {
-                currentStep++;
-                updateUI();
-            }
+        // OAuth handlers
+        function loginWithGoogle() {
+            // Redirect to Google OAuth endpoint in your API
+            window.location.href = 'crm/api/auth/oauth-google.php';
+        }
+
+        function loginWithMicrosoft() {
+            // Redirect to Microsoft OAuth endpoint in your API
+            window.location.href = 'crm/api/auth/oauth-microsoft.php';
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // You can add any initialization code here
         });
-
-        // Module selection
-        document.querySelectorAll('.module-card').forEach(card => {
-            card.addEventListener('click', function() {
-                const module = this.dataset.module;
-                
-                if (module === 'crm') {
-                    // CRM is always required
-                    return;
-                }
-                
-                this.classList.toggle('selected');
-                
-                if (this.classList.contains('selected')) {
-                    if (!wizardData.modules.includes(module)) {
-                        wizardData.modules.push(module);
-                    }
-                } else {
-                    wizardData.modules = wizardData.modules.filter(m => m !== module);
-                }
-            });
-        });
-
-        // Auth buttons behaviour (final step)
-        const googleBtn = document.getElementById('googleBtn');
-        const emailBtn = document.getElementById('emailBtn');
-        const emailFormWrap = document.getElementById('emailForm');
-        const inlineEmailForm = document.getElementById('inlineEmailForm');
-        const authModeInput = document.getElementById('authMode');
-        const submitEmailBtn = document.getElementById('submitEmailBtn');
-        const switchModeBtn = document.getElementById('switchMode');
-
-        if (googleBtn) {
-            googleBtn.addEventListener('click', () => {
-                // redirect to Google login
-                window.location.href = 'login_google.php';
-            });
-        }
-
-        if (emailBtn) {
-            emailBtn.addEventListener('click', () => {
-                if (emailFormWrap.style.display === 'block') {
-                    emailFormWrap.style.display = 'none';
-                } else {
-                    emailFormWrap.style.display = 'block';
-                    // set to login by default
-                    authModeInput.value = 'login';
-                    submitEmailBtn.textContent = 'Se connecter';
-                    switchModeBtn.textContent = 'Créer un compte';
-                }
-            });
-        }
-
-        if (switchModeBtn) {
-            switchModeBtn.addEventListener('click', () => {
-                if (authModeInput.value === 'login') {
-                    authModeInput.value = 'register';
-                    submitEmailBtn.textContent = "S'inscrire";
-                    switchModeBtn.textContent = 'Déjà un compte ?';
-                } else {
-                    authModeInput.value = 'login';
-                    submitEmailBtn.textContent = 'Se connecter';
-                    switchModeBtn.textContent = 'Créer un compte';
-                }
-            });
-        }
-
-        if (inlineEmailForm) {
-            inlineEmailForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const formData = new FormData(inlineEmailForm);
-                const mode = formData.get('mode') || 'login';
-                const endpoint = mode === 'register' ? 'register.php' : 'login.php';
-
-                submitEmailBtn.disabled = true;
-                submitEmailBtn.textContent = (mode === 'register') ? "Inscription..." : "Connexion...";
-
-                try {
-                    const body = new URLSearchParams();
-                    for (const pair of formData.entries()) body.append(pair[0], pair[1]);
-
-                    const resp = await fetch(endpoint, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: body.toString()
-                    });
-
-                    // Try parse JSON response (if backend returns JSON)
-                    let json = null;
-                    try { json = await resp.json(); } catch (err) { json = null; }
-
-                    if (resp.ok && json && json.success) {
-                        // Auth successful — reload to reflect authenticated state
-                        window.location.reload();
-                        return;
-                    }
-
-                    // Fallback: submit regular form to let server handle redirects
-                    inlineEmailForm.action = endpoint;
-                    inlineEmailForm.submit();
-                } catch (err) {
-                    console.error('Auth error', err);
-                    inlineEmailForm.action = endpoint;
-                    inlineEmailForm.submit();
-                }
-            });
-        }
-
-        // Initialize
-        updateUI();
     </script>
 </body>
 </html>

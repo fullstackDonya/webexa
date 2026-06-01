@@ -109,8 +109,8 @@ for lead in cold_leads:
 
 import requests
 
-API_URL = "http://localhost:8000"
-API_KEY = "your-secret-key"
+API_URL = "https://webexa.online"
+API_KEY = "bDVQoVSdFU0UN7Z1xLlWDH7eRV6Yor2dOI-fgUj3Cps"
 
 headers = {
     "Content-Type": "application/json",

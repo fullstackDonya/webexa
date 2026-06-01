@@ -48,18 +48,18 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 $envLoaded = loadEnv();
 
 // Configuration
-$apiUrl = getenv('AI_API_URL') ?: 'http://localhost:8000';
-$apiKey = getenv('AI_API_KEY') ?: 'dev-secret-key-change-me';
+$apiUrl = getenv('AI_API_BASE_URL') ?: 'https://webexa.online';
+$apiKey = getenv('AI_API_KEY') ?: 'bDVQoVSdFU0UN7Z1xLlWDH7eRV6Yor2dOI-fgUj3Cps';
 
 echo "API URL      : " . $apiUrl . "\n";
 echo "API Key      : " . substr($apiKey, 0, 20) . "...\n";
 echo "Serveur      : " . $_SERVER['SERVER_NAME'] . "\n";
 echo "IP Serveur   : " . $_SERVER['SERVER_ADDR'] . "\n\n";
 
-if (!$envLoaded && $apiUrl === 'http://localhost:8000') {
+if (!$envLoaded && $apiUrl === 'https://webexa.online') {
     echo "⚠️  ATTENTION: Configuration par défaut utilisée\n";
     echo "   Créez un fichier .env avec:\n";
-    echo "   AI_API_URL=http://VOTRE_IP_ORACLE:8000\n";
+    echo "   AI_API_BASE_URL=https://webexa.online\n";
     echo "   AI_API_KEY=votre-clé-secrète\n\n";
 }
 

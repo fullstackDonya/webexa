@@ -105,6 +105,7 @@ try {
                 vat_number = ?,
                 employee_count = ?,
                 annual_revenue = ?,
+                interne_customer = 1,
                 updated_at = NOW()
             WHERE id = ?
         ");
@@ -130,8 +131,8 @@ try {
             INSERT INTO companies (
                 name, email, phone, address, city, postal_code, website,
                 industry, siret, vat_number, employee_count, annual_revenue,
-                customer_id, status, is_active, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'client', 1, NOW(), NOW())
+                customer_id, status, is_active, interne_customer, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'client', 1, 1, NOW(), NOW())
         ");
         
         $stmt->execute([

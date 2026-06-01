@@ -40,8 +40,12 @@ $customerId = (int)$_SESSION['customer_id'];
 $action = $_REQUEST['action'] ?? '';
 $method = $_SERVER['REQUEST_METHOD'];
 
-// Initialiser le client API
-$aiClient = new AIAgentsClient();
+// Initialiser le client API avec l'URL de base depuis .env
+$aiClientConfig = [
+    'baseUrl' => $_ENV['AI_API_BASE_URL'] ?? 'https://webexa.online',
+    'apiKey' => $_ENV['AI_API_KEY'] ?? 'bDVQoVSdFU0UN7Z1xLlWDH7eRV6Yor2dOI-fgUj3Cps'
+];
+$aiClient = new AIAgentsClient($aiClientConfig['baseUrl'], $aiClientConfig['apiKey']);
 
 try {
     switch ($action) {

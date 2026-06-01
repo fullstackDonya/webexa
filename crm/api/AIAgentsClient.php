@@ -14,9 +14,9 @@ class AIAgentsClient
         ?string $apiKey = null,
         int $timeout = 30
     ) {
-        // Utiliser AI_API_URL du .env, sinon localhost:8000 (développement)
+        // Use environment variable if no baseUrl provided
         if (empty($baseUrl)) {
-            $baseUrl = $_ENV['AI_API_URL'] ?? getenv('AI_API_URL') ?? 'http://localhost:8000';
+            $baseUrl = $_ENV['AI_API_BASE_URL'] ?? 'https://webexa.online';
         }
         $this->baseUrl = rtrim($baseUrl, '/');
         $this->apiKey = $apiKey ?? ($_ENV['AI_API_KEY'] ?? 'bDVQoVSdFU0UN7Z1xLlWDH7eRV6Yor2dOI-fgUj3Cps');

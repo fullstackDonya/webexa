@@ -15,9 +15,11 @@ $results = [
     'tests' => []
 ];
 
-// Test 1: Initialisation du client
+// Test 1: Initialisation du client avec l'URL correcte
 try {
-    $client = new AIAgentsClient();
+    $baseUrl = $_ENV['AI_API_BASE_URL'] ?? 'https://webexa.online';
+    $apiKey = $_ENV['AI_API_KEY'] ?? 'bDVQoVSdFU0UN7Z1xLlWDH7eRV6Yor2dOI-fgUj3Cps';
+    $client = new AIAgentsClient($baseUrl, $apiKey);
     $results['tests']['client_init'] = [
         'status' => 'success',
         'message' => 'Client initialisé avec succès'
