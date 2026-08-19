@@ -1,5 +1,6 @@
 // Analytics Funnel - Script pour l'analyse de l'entonnoir de vente
 document.addEventListener('DOMContentLoaded', function() {
+    
     console.log('Analytics Funnel page loaded');
 
     // Initialisation des graphiques et données
@@ -7,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadFunnelData();
     setupFunnelFilters();
 });
+
 
 function initFunnelAnalytics() {
     // Graphique principal de l'entonnoir
@@ -25,16 +27,34 @@ function initFunnelAnalytics() {
     }
 }
 
-function createFunnelChart() {
+let funnelChart;
+
+function createFunnelChart(metrics = {}) {
     const ctx = document.getElementById('funnelChart').getContext('2d');
-    
-    new Chart(ctx, {
+
+    funnelChart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: ['Visiteurs', 'Leads', 'Prospects qualifiés', 'Opportunités', 'Clients'],
+            labels: [
+                'Visiteurs',
+                'Leads',
+                'Prospects qualifiés',
+                'Opportunités',
+                'Clients'
+            ],
             datasets: [{
                 label: 'Nombre',
-                data: [10000, 2500, 750, 200, 80],
+
+                // DONNÉES DYNAMIQUES DEPUIS L'API
+                data: [
+                    metrics.visitors || 0,
+                    metrics.leads || 0,
+                    metrics.prospects || 0,
+                    metrics.opportunities || 0,
+                    metrics.customers || 0
+                ],
+
+                // ON GARDE TES COULEURS
                 backgroundColor: [
                     '#e3f2fd',
                     '#bbdefb',
@@ -42,39 +62,51 @@ function createFunnelChart() {
                     '#64b5f6',
                     '#2196f3'
                 ],
+
                 borderColor: '#1976d2',
                 borderWidth: 1
             }]
         },
+
         options: {
             responsive: true,
             maintainAspectRatio: false,
+
             plugins: {
                 legend: {
                     display: false
                 },
+
                 tooltip: {
                     callbacks: {
                         afterLabel: function(context) {
+
                             const index = context.dataIndex;
                             const data = context.dataset.data;
+
                             if (index > 0) {
                                 const prev = data[index - 1];
                                 const current = data[index];
-                                const conversionRate = ((current / prev) * 100).toFixed(1);
-                                return `Taux de conversion: ${conversionRate}%`;
+
+                                if (prev > 0) {
+                                    const conversionRate = ((current / prev) * 100).toFixed(1);
+                                    return `Taux de conversion: ${conversionRate}%`;
+                                }
                             }
+
                             return '';
                         }
                     }
                 }
             },
+
             scales: {
                 y: {
                     beginAtZero: true,
+
                     ticks: {
                         callback: function(value) {
-                            return value.toLocaleString();
+                            return value.toLocaleString('fr-FR');
                         }
                     }
                 }
@@ -82,30 +114,51 @@ function createFunnelChart() {
         }
     });
 }
+let conversionChart;
 
-function createConversionChart() {
+function createConversionChart(metrics = {}) {
     const ctx = document.getElementById('conversionChart').getContext('2d');
-    
-    new Chart(ctx, {
+
+    conversionChart = new Chart(ctx, {
         type: 'line',
+
         data: {
-            labels: ['Visiteurs → Leads', 'Leads → Prospects', 'Prospects → Opportunités', 'Opportunités → Clients'],
+            labels: [
+                'Visiteurs → Leads',
+                'Leads → Prospects',
+                'Prospects → Opportunités',
+                'Opportunités → Clients'
+            ],
+
             datasets: [{
                 label: 'Taux de conversion (%)',
-                data: [25, 30, 26.7, 40],
+
+                // DONNÉES DYNAMIQUES
+                data: [
+                    metrics.visitorToLead || 0,
+                    metrics.leadToProspect || 0,
+                    metrics.prospectToOpportunity || 0,
+                    metrics.opportunityToCustomer || 0
+                ],
+
+                // ON GARDE TES COULEURS
                 borderColor: '#28a745',
                 backgroundColor: 'rgba(40, 167, 69, 0.1)',
+
                 tension: 0.4,
                 fill: true
             }]
         },
+
         options: {
             responsive: true,
             maintainAspectRatio: false,
+
             scales: {
                 y: {
                     beginAtZero: true,
-                    max: 50,
+                    max: 100,
+
                     ticks: {
                         callback: function(value) {
                             return value + '%';
@@ -113,6 +166,7 @@ function createConversionChart() {
                     }
                 }
             },
+
             plugins: {
                 tooltip: {
                     callbacks: {
@@ -126,48 +180,68 @@ function createConversionChart() {
     });
 }
 
-function createFunnelTrendChart() {
+let funnelTrendChart;
+
+function createFunnelTrendChart(trendData = {}) {
     const ctx = document.getElementById('funnelTrendChart').getContext('2d');
-    
-    new Chart(ctx, {
+
+    funnelTrendChart = new Chart(ctx, {
         type: 'line',
+
         data: {
-            labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun'],
+            labels: trendData.labels || ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun'],
+
             datasets: [
                 {
                     label: 'Visiteurs',
-                    data: [8500, 9200, 10000, 9800, 11200, 10500],
+
+                    // DONNÉES DYNAMIQUES
+                    data: trendData.visitors || [],
+
+                    // ON GARDE TES COULEURS
                     borderColor: '#e3f2fd',
                     backgroundColor: 'rgba(227, 242, 253, 0.1)'
                 },
+
                 {
                     label: 'Leads',
-                    data: [2100, 2300, 2500, 2450, 2800, 2625],
+
+                    data: trendData.leads || [],
+
                     borderColor: '#90caf9',
                     backgroundColor: 'rgba(144, 202, 249, 0.1)'
                 },
+
                 {
                     label: 'Opportunités',
-                    data: [160, 175, 200, 195, 220, 210],
+
+                    data: trendData.opportunities || [],
+
                     borderColor: '#64b5f6',
                     backgroundColor: 'rgba(100, 181, 246, 0.1)'
                 },
+
                 {
                     label: 'Clients',
-                    data: [64, 70, 80, 78, 88, 84],
+
+                    data: trendData.customers || [],
+
                     borderColor: '#2196f3',
                     backgroundColor: 'rgba(33, 150, 243, 0.1)'
                 }
             ]
         },
+
         options: {
             responsive: true,
             maintainAspectRatio: false,
+
             scales: {
                 y: {
                     beginAtZero: true
                 }
             },
+
             interaction: {
                 mode: 'index',
                 intersect: false
@@ -182,8 +256,11 @@ function loadFunnelData() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                createFunnelChart(data.metrics);
                 updateFunnelMetrics(data.metrics);
                 updateFunnelDetails(data.details);
+                createConversionChart(data.conversion);
+                createFunnelTrendChart(data.trend);
             }
         })
         .catch(error => {

@@ -13,6 +13,7 @@ header('Content-Type: application/json');
 
 try {
     require_once __DIR__ . '/../config/database.php';
+    require_once __DIR__ . '/permission-bootstrap.php';
     require_once __DIR__ . '/../includes/EmailSyncManager.php';
     
     // Vérifier l'authentification

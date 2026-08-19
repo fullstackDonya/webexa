@@ -10,6 +10,7 @@ header('Content-Type: application/json');
 
 // Charger d'abord la configuration de la base de données
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/permission-bootstrap.php';
 
 // Démarrer la session si nécessaire
 if (session_status() === PHP_SESSION_NONE) {

@@ -1,8 +1,14 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
-require_once __DIR__ . '/../../crm/config/database.php';
 require_once __DIR__ . '/../../vendor/autoload.php';
+require_once __DIR__ . '/../../crm/config/database.php';
 include_once __DIR__ . '/../../crm/includes/auth.php';
+requireFeature('payroll');
+
+
 
 $customer_id = isset($_SESSION['customer_id']) ? (int)$_SESSION['customer_id'] : null;
 $user_id = $_SESSION['user_id'] ?? ($user['id'] ?? null);

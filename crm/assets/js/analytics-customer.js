@@ -173,6 +173,8 @@ function loadCustomerData() {
             if (data && data.success) {
                 updateCustomerMetrics(data.metrics || {});
                 updateCustomerTable(data.customers || []);
+                updateChartsFromApi(data);
+                updateCustomerJourney(data.customer_journey || []);
             } else {
                 console.error('API error', data);
                 showDemoData();
@@ -182,6 +184,23 @@ function loadCustomerData() {
             console.error('Erreur lors du chargement des données:', error);
             showDemoData();
         });
+}
+function updateCustomerJourney(journey) {
+    const steps = document.querySelectorAll('#customer-journey .journey-step');
+
+    journey.forEach((item, index) => {
+        if (!steps[index]) return;
+
+        let badge = steps[index].querySelector('.journey-count');
+
+        if (!badge) {
+            badge = document.createElement('div');
+            badge.className = 'journey-count fw-bold text-primary mt-2';
+            steps[index].appendChild(badge);
+        }
+
+        badge.textContent = item.count;
+    });
 }
 
 function updateCustomerMetrics(metrics) {
@@ -198,6 +217,7 @@ function updateCustomerMetrics(metrics) {
 }
 
 function updateCustomerTable(customers) {
+    window._customerData = customers;
     const tableBody = document.querySelector('#customer-analysis-table tbody');
     if (!tableBody) return;
 

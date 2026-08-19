@@ -481,6 +481,169 @@
             width: 150px;
         }
     }
+
+    /* ===== POPUP RAPPELS DU JOUR ===== */
+    .today-reminders-popup {
+        position: fixed;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        width: 360px;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.18), 0 8px 24px rgba(0,0,0,0.1);
+        z-index: 2000;
+        display: none;
+        border: 1px solid rgba(0,0,0,0.07);
+        overflow: hidden;
+    }
+    .today-reminders-popup.show {
+        display: block;
+        animation: popupSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes popupSlideUp {
+        from { opacity: 0; transform: translateY(30px) scale(0.95); }
+        to   { opacity: 1; transform: translateY(0)   scale(1);    }
+    }
+    .reminder-popup-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.9rem 1.1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .reminder-popup-header h4 {
+        margin: 0;
+        font-size: 0.95rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .reminder-popup-close {
+        background: rgba(255,255,255,0.2);
+        border: none;
+        color: white;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        transition: background 0.2s;
+        flex-shrink: 0;
+    }
+    .reminder-popup-close:hover { background: rgba(255,255,255,0.35); }
+    .reminder-popup-body {
+        max-height: 380px;
+        overflow-y: auto;
+        padding: 0.6rem;
+    }
+    .reminder-section-title {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #6b7280;
+        padding: 0.5rem 0.4rem 0.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    .reminder-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.55rem;
+        padding: 0.55rem 0.5rem;
+        border-radius: 8px;
+        margin-bottom: 0.2rem;
+        text-decoration: none;
+        color: inherit;
+        transition: background 0.15s;
+    }
+    .reminder-item:hover { background: #f9fafb; }
+    .reminder-item-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 0.8rem;
+    }
+    .reminder-icon-task { background: #ede9fe; color: #7c3aed; }
+    .reminder-icon-call { background: #d1fae5; color: #059669; }
+    .reminder-icon-mission { background: #ffedd5; color: #c2410c; }
+    .reminder-item-title {
+        font-size: 0.84rem;
+        font-weight: 600;
+        color: #111827;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 270px;
+    }
+    .reminder-item-sub { font-size: 0.72rem; color: #9ca3af; margin-top: 1px; }
+    .reminder-item {
+        display: flex;
+        align-items: center;
+    }
+    .reminder-item-link {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.55rem;
+        flex: 1;
+        min-width: 0;
+        padding: 0.55rem 0.3rem 0.55rem 0.5rem;
+        border-radius: 8px 0 0 8px;
+        text-decoration: none;
+        color: inherit;
+        transition: background 0.15s;
+    }
+    .reminder-item-link:hover { background: #f3f4f6; }
+    .reminder-delete-btn {
+        flex-shrink: 0;
+        background: none;
+        border: none;
+        color: #d1d5db;
+        width: 28px;
+        height: 100%;
+        min-height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0 8px 8px 0;
+        cursor: pointer;
+        font-size: 0.7rem;
+        transition: color 0.15s, background 0.15s;
+        padding: 0 0.4rem;
+    }
+    .reminder-delete-btn:hover { color: #ef4444; background: #fee2e2; }
+    .reminder-popup-footer {
+        padding: 0.6rem 1rem;
+        border-top: 1px solid #f3f4f6;
+        background: #f9fafb;
+        display: flex;
+        gap: 0.5rem;
+    }
+    .reminder-popup-footer a {
+        flex: 1;
+        text-align: center;
+        font-size: 0.8rem;
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+        padding: 0.35rem;
+        border-radius: 6px;
+        transition: background 0.2s;
+    }
+    .reminder-popup-footer a:hover { background: rgba(102,126,234,0.1); }
+    @media (max-width: 480px) {
+        .today-reminders-popup { width: calc(100vw - 2rem); right: 1rem; }
+    }
 </style>
 
 <nav class="crm-topbar">
@@ -548,7 +711,7 @@
         <!-- Bouton Analytics -->
         <button class="topbar-icon-btn custom-tooltip" 
                 data-tooltip="📊 Analytics - Visualisez vos performances et KPIs en temps réel" 
-                onclick="window.location.href='analytics.php'">
+                onclick="window.location.href='analytics-sales.php'">
             <i class="fas fa-chart-line"></i>   
         </button>
 
@@ -561,7 +724,7 @@
         <!-- Bouton Email -->
         <button class="topbar-icon-btn custom-tooltip" 
                 data-tooltip="✉️ Emails - Gérez vos campagnes et communications directement depuis le CRM" 
-                onclick="window.location.href='emails.php'">
+                onclick="window.location.href='email-inbox.php'">
             <i class="fas fa-envelope"></i>         
         </button>
 
@@ -594,6 +757,25 @@
         </button>
     </div>
 </nav>
+
+<!-- Popup rappels du jour (persisté jusqu'à la fermeture, revient chaque jour) -->
+<div class="today-reminders-popup" id="todayRemindersPopup">
+    <div class="reminder-popup-header">
+        <h4><i class="fas fa-calendar-day"></i> Rappels d'aujourd'hui</h4>
+        <button class="reminder-popup-close" onclick="dismissTodayReminders()" title="Fermer — reviendra demain">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="reminder-popup-body" id="todayRemindersBody">
+        <div style="text-align:center;padding:1.2rem;color:#9ca3af;">
+            <i class="fas fa-spinner fa-spin"></i>
+        </div>
+    </div>
+    <div class="reminder-popup-footer">
+        <a href="tasks.php"><i class="fas fa-tasks me-1"></i> Tâches</a>
+        <a href="calls.php"><i class="fas fa-phone me-1"></i> Appels</a>
+    </div>
+</div>
 
 <script>
     // Gestion des notifications
@@ -773,4 +955,139 @@
     // Charger les notifications au démarrage (toutes les 30 secondes)
     loadNotifications();
     setInterval(loadNotifications, 30000);
+
+    // ===== RAPPELS DU JOUR =====
+    function _escReminder(s) {
+        if (!s) return '';
+        return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    async function loadTodayReminders() {
+        const today = new Date().toISOString().slice(0, 10);
+        const dismissedKey = 'crm_reminders_dismissed_date';
+        if (localStorage.getItem(dismissedKey) === today) return;
+
+        try {
+            const res  = await fetch('api/today-reminders.php');
+            const data = await res.json();
+            const tasks = data.tasks || [];
+            const calls = data.calls || [];
+            const missions = data.missions || [];
+            if (!tasks.length && !calls.length && !missions.length) return;
+
+            const prioColor = p => p === 'urgent' ? '#dc2626' : p === 'high' ? '#ea580c' : '#6b7280';
+            let html = '';
+
+            if (tasks.length) {
+                html += `<div class="reminder-section-title"><i class="fas fa-tasks"></i> T\u00e2ches (${tasks.length})</div>`;
+                tasks.forEach(t => {
+                    const time = t.due_date ? new Date(t.due_date).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
+                    html += `<div class="reminder-item" data-id="${t.id}" data-type="task">
+                        <a href="tasks.php" class="reminder-item-link">
+                            <div class="reminder-item-icon reminder-icon-task"><i class="fas fa-check-circle"></i></div>
+                            <div>
+                                <div class="reminder-item-title">${_escReminder(t.title)}</div>
+                                <div class="reminder-item-sub" style="color:${prioColor(t.priority)}">${time ? '\u23f0 ' + time + ' \u00b7 ' : ''}${_escReminder(t.priority)}</div>
+                            </div>
+                        </a>
+                        <button class="reminder-delete-btn" onclick="deleteReminder('task',${t.id},this)" title="Supprimer cette t\u00e2che"><i class="fas fa-close"></i></button>
+                    </div>`;
+                });
+            }
+
+            if (calls.length) {
+                html += `<div class="reminder-section-title"><i class="fas fa-phone"></i> Appels (${calls.length})</div>`;
+                calls.forEach(c => {
+                    const time = c.scheduled_time ? new Date(c.scheduled_time).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
+                    html += `<div class="reminder-item" data-id="${c.id}" data-type="call">
+                        <a href="calls.php" class="reminder-item-link">
+                            <div class="reminder-item-icon reminder-icon-call"><i class="fas fa-phone"></i></div>
+                            <div>
+                                <div class="reminder-item-title">${_escReminder(c.contact_name)}</div>
+                                <div class="reminder-item-sub">\u23f0 ${time}${c.phone ? ' \u00b7 ' + _escReminder(c.phone) : ''}</div>
+                            </div>
+                        </a>
+                        <button class="reminder-delete-btn" onclick="deleteReminder('call',${c.id},this)" title="Supprimer cet appel"><i class="fas fa-close"></i></button>
+                    </div>`;
+                });
+            }
+
+            if (missions.length) {
+                html += `<div class="reminder-section-title"><i class="fas fa-route"></i> Missions (${missions.length})</div>`;
+                missions.forEach(m => {
+                    const time = m.datetime ? new Date(m.datetime).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
+                    const route = [m.departure, m.arrival].filter(Boolean).join(' → ');
+                    html += `<div class="reminder-item" data-id="${m.id}" data-type="mission">
+                        <a href="missions.php" class="reminder-item-link">
+                            <div class="reminder-item-icon reminder-icon-mission"><i class="fas fa-route"></i></div>
+                            <div>
+                                <div class="reminder-item-title">Dossier #${_escReminder(m.folder_id)} · ${_escReminder(m.company_name)}</div>
+                                <div class="reminder-item-sub">⏰ ${time}${route ? ' · ' + _escReminder(route) : ''}</div>
+                            </div>
+                        </a>
+                        <button class="reminder-delete-btn" onclick="completeMissionReminder(${m.id},this)" title="Marquer cette mission comme terminée"><i class="fas fa-check"></i></button>
+                    </div>`;
+                });
+            }
+
+            document.getElementById('todayRemindersBody').innerHTML = html;
+            document.getElementById('todayRemindersPopup').classList.add('show');
+        } catch(e) { /* silencieux */ }
+    }
+
+    async function deleteReminder(type, id, btn) {
+        const labels = {task: 't\u00e2che', call: 'appel', mission: 'mission'};
+        if (!confirm('Supprimer cette ' + labels[type] + ' ?')) return;
+        if (type === 'mission') {
+            return completeMissionReminder(id, btn);
+        }
+        const api = type === 'task' ? 'api/tasks.php' : 'api/calls.php';
+        const payload = {action: 'delete', id: id};
+        try {
+            const res = await fetch(api, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                const item = btn.closest('.reminder-item');
+                item.remove();
+                // Masquer le popup s'il ne reste plus rien
+                const remaining = document.querySelectorAll('#todayRemindersBody .reminder-item');
+                if (!remaining.length) document.getElementById('todayRemindersPopup').classList.remove('show');
+            } else {
+                alert('Erreur : ' + (data.message || 'impossible de supprimer'));
+            }
+        } catch(e) {
+            alert('Erreur r\u00e9seau');
+        }
+    }
+
+    async function completeMissionReminder(id, btn) {
+        if (!confirm('Marquer cette mission comme terminée ?')) return;
+        try {
+            const res = await fetch('api/today-reminders.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({action: 'complete_mission', id: id})
+            });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.message || 'Mise à jour impossible');
+            const item = btn.closest('.reminder-item');
+            item.remove();
+            const remaining = document.querySelectorAll('#todayRemindersBody .reminder-item');
+            if (!remaining.length) document.getElementById('todayRemindersPopup').classList.remove('show');
+        } catch (e) {
+            alert('Erreur : ' + e.message);
+        }
+    }
+
+    function dismissTodayReminders() {
+        localStorage.setItem('crm_reminders_dismissed_date', new Date().toISOString().slice(0, 10));
+        document.getElementById('todayRemindersPopup').classList.remove('show');
+    }
+
+    // Délai pour ne pas bloquer le rendu initial
+    setTimeout(loadTodayReminders, 1800);
 </script>

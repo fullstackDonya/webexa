@@ -10,6 +10,18 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 require __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../../config/mailer.php';
+
+$autoloaders = [
+    __DIR__ . '/../../../vendor/autoload.php',
+    __DIR__ . '/../../vendor/autoload.php',
+];
+foreach ($autoloaders as $autoloader) {
+    if (is_file($autoloader)) {
+        require_once $autoloader;
+        break;
+    }
+}
 
 // Security headers
 header('Content-Type: application/json; charset=utf-8');
@@ -63,6 +75,7 @@ try {
 
     // Hash password
     $hashed_password = password_hash($password, PASSWORD_BCRYPT);
+    $verify_token = bin2hex(random_bytes(32));
 
     // Start transaction
     $pdo->beginTransaction();
@@ -72,8 +85,8 @@ try {
 
     // Create user
     $stmt = $pdo->prepare("
-        INSERT INTO users (username, first_name, last_name, email, password, phone, role, is_active, onboarding_completed)
-        VALUES (:username, :first_name, :last_name, :email, :password, :phone, 'sales', 1, 0)
+        INSERT INTO users (username, first_name, last_name, email, password, phone, role, is_active, onboarding_completed, email_verified, email_verify_token)
+        VALUES (:username, :first_name, :last_name, :email, :password, :phone, 'sales', 1, 0, 0, :email_verify_token)
     ");
     
     $stmt->execute([
@@ -82,7 +95,8 @@ try {
         ':last_name' => $last_name,
         ':email' => $email,
         ':password' => $hashed_password,
-        ':phone' => $phone ?: null
+        ':phone' => $phone ?: null,
+        ':email_verify_token' => $verify_token,
     ]);
 
     $user_id = $pdo->lastInsertId();
@@ -94,7 +108,27 @@ try {
 
     $pdo->commit();
 
-    jsonResponse(true, 'Inscription réussie', [
+    $verify_link = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http')
+        . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost')
+        . '/forms/verify_email.php?token=' . urlencode($verify_token);
+    $safeName = htmlspecialchars($first_name . ' ' . $last_name, ENT_QUOTES, 'UTF-8');
+    $safeLink = htmlspecialchars($verify_link, ENT_QUOTES, 'UTF-8');
+    $emailSent = sendEmail(
+        $email,
+        'Vérification de votre adresse email - Webexa By WebItech',
+        "<h2>Bienvenue sur Webexa By WebItech !</h2>
+         <p>Bonjour <strong>{$safeName}</strong>,</p>
+         <p>Merci pour votre inscription sur Webexa By WebItech.</p>
+         <p>Pour activer votre compte, veuillez vérifier votre adresse email :</p>
+         <p><a href=\"{$safeLink}\" style=\"display:inline-block;padding:12px 24px;background:#007bff;color:white;text-decoration:none;border-radius:5px;\">Vérifier mon email</a></p>
+         <p>Ou copiez ce lien dans votre navigateur :<br><code>{$safeLink}</code></p>
+         <p>Cordialement,<br>L'équipe Webexa</p>"
+    );
+    if (!$emailSent) {
+        error_log('[REGISTER] Email de vérification non envoyé pour user_id: ' . $user_id);
+    }
+
+    jsonResponse(true, 'Inscription réussie. Vérifiez votre adresse email.', [
         'user_id' => $user_id,
         'email' => $email,
         'name' => "$first_name $last_name"

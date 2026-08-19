@@ -102,19 +102,19 @@ $page_title = "Recalculer les scores IA - CRM Intelligent";
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>Lead vide (juste un email)</td>
+                                    <td class="text-light">Lead vide (juste un email)</td>
                                     <td><span class="badge bg-danger">~10</span></td>
                                 </tr>
                                 <tr>
-                                    <td>Lead avec tous les champs, stage "Nouveau"</td>
+                                    <td class="text-light">Lead avec tous les champs, stage "Nouveau"</td>
                                     <td><span class="badge bg-warning">~50-60</span></td>
                                 </tr>
                                 <tr>
-                                    <td>Lead complet, stage "Qualifié"</td>
+                                    <td class="text-light">Lead complet, stage "Qualifié"</td>
                                     <td><span class="badge bg-info">~80</span></td>
                                 </tr>
                                 <tr>
-                                    <td>Lead complet, stage "Converti"</td>
+                                    <td class="text-light">Lead complet, stage "Converti"</td>
                                     <td><span class="badge bg-success">~100</span></td>
                                 </tr>
                             </tbody>

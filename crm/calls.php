@@ -5,6 +5,20 @@ require_once __DIR__ . '/config/database.php';
 $page_title = "Rappels d'Appels - CRM";
 $customer_id = $_SESSION['customer_id'] ?? 22;
 
+// Listes pour le select "Associé à" du modal
+$modal_leads     = [];
+$modal_companies = [];
+try {
+    $s = $pdo->prepare("SELECT id, CONCAT(first_name,' ',last_name) AS label, phone, phone2, phone3 FROM leads WHERE customer_id = ? ORDER BY first_name LIMIT 300");
+    $s->execute([$customer_id]);
+    $modal_leads = $s->fetchAll(PDO::FETCH_ASSOC);
+} catch (Throwable $e) {}
+try {
+    $s = $pdo->prepare("SELECT id, name AS label, phone FROM companies WHERE customer_id = ? ORDER BY name LIMIT 300");
+    $s->execute([$customer_id]);
+    $modal_companies = $s->fetchAll(PDO::FETCH_ASSOC);
+} catch (Throwable $e) {}
+
 // Récupérer les statistiques
 $statsQuery = $pdo->prepare("
     SELECT 
@@ -486,6 +500,25 @@ $calls = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <label class="form-label">Notes</label>
                             <textarea class="form-control" id="call_notes" name="notes" rows="3"></textarea>
                         </div>
+
+                        <!-- Associé à un lead ou un client -->
+                        <div class="mb-3">
+                            <label class="form-label">Associé à</label>
+                            <div class="row g-2">
+                                <div class="col-5">
+                                    <select class="form-select" id="call_contact_type">
+                                        <option value="other">-- Aucun --</option>
+                                        <option value="lead">Lead</option>
+                                        <option value="customer">Client</option>
+                                    </select>
+                                </div>
+                                <div class="col-7">
+                                    <select class="form-select" id="call_contact_id" disabled>
+                                        <option value="">-- Sélectionner --</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
@@ -502,6 +535,38 @@ $calls = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     
     <script>
+    // Données pour les selects du modal (injectées depuis PHP)
+    const LEADS_DATA     = <?php echo json_encode(array_values($modal_leads), JSON_UNESCAPED_UNICODE); ?>;
+    const COMPANIES_DATA = <?php echo json_encode(array_values($modal_companies), JSON_UNESCAPED_UNICODE); ?>;
+    // Maps id -> item pour accès direct sans passer par dataset
+    const LEADS_MAP     = Object.fromEntries(LEADS_DATA.map(i => [String(i.id), i]));
+    const COMPANIES_MAP = Object.fromEntries(COMPANIES_DATA.map(i => [String(i.id), i]));
+
+    // Peupler le select contact_id
+    document.getElementById('call_contact_type').addEventListener('change', function () {
+        const contactId = document.getElementById('call_contact_id');
+        contactId.innerHTML = '<option value="">-- Sélectionner --</option>';
+        const list = this.value === 'lead' ? LEADS_DATA : this.value === 'customer' ? COMPANIES_DATA : [];
+        list.forEach(item => {
+            const opt = document.createElement('option');
+            opt.value = item.id;
+            opt.textContent = item.label;
+            contactId.appendChild(opt);
+        });
+        contactId.disabled = (list.length === 0);
+    });
+
+    // Remplir nom + téléphone depuis le Map JS (fiable, évite les aléas du dataset)
+    document.getElementById('call_contact_id').addEventListener('change', function () {
+        if (!this.value) return;
+        const type = document.getElementById('call_contact_type').value;
+        const map  = type === 'lead' ? LEADS_MAP : COMPANIES_MAP;
+        const item = map[String(this.value)];
+        if (!item) return;
+        document.getElementById('call_contact_name').value = item.label  || '';
+        document.getElementById('call_phone').value        = item.phone  || '';
+    });
+
     // Sauvegarder un champ inline
     function saveFieldInline(element) {
         const callId = element.dataset.callId;
@@ -546,7 +611,10 @@ $calls = $stmt->fetchAll(PDO::FETCH_ASSOC);
         document.getElementById('callModalTitle').textContent = 'Nouveau Rappel d\'Appel';
         document.getElementById('callForm').reset();
         document.getElementById('call_id').value = '';
-        
+        document.getElementById('call_contact_type').value = 'other';
+        document.getElementById('call_contact_id').innerHTML = '<option value="">-- Sélectionner --</option>';
+        document.getElementById('call_contact_id').disabled = true;
+
         // Définir l'heure par défaut à maintenant + 1 heure
         const now = new Date();
         now.setHours(now.getHours() + 1);
@@ -568,6 +636,14 @@ $calls = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     document.getElementById('call_status').value = call.status;
                     document.getElementById('call_notes').value = call.notes || '';
                     document.getElementById('call_duration').value = call.duration_minutes;
+
+                    // Remplir le champ Associé à
+                    const ct = document.getElementById('call_contact_type');
+                    ct.value = (call.contact_type && call.contact_type !== 'other') ? call.contact_type : 'other';
+                    ct.dispatchEvent(new Event('change'));
+                    if (call.contact_id) {
+                        setTimeout(() => { document.getElementById('call_contact_id').value = call.contact_id; }, 60);
+                    }
                     
                     if (call.scheduled_time) {
                         const date = new Date(call.scheduled_time);
@@ -614,6 +690,8 @@ $calls = $stmt->fetchAll(PDO::FETCH_ASSOC);
         formData.forEach((value, key) => {
             data[key] = value;
         });
+        data['contact_type'] = document.getElementById('call_contact_type').value || 'other';
+        data['contact_id']   = document.getElementById('call_contact_id').value   || null;
         
         fetch('api/calls.php', {
             method: 'POST',
@@ -633,6 +711,23 @@ $calls = $stmt->fetchAll(PDO::FETCH_ASSOC);
             alert('Erreur lors de l\'enregistrement');
         });
     });
+    // Auto-ouvrir le modal si redirigé depuis leads.php ou customers.php
+    const _urlP        = new URLSearchParams(window.location.search);
+    const _fromLead    = _urlP.get('from_lead');
+    const _fromCompany = _urlP.get('from_company');
+    const _autoFrom    = _fromLead || _fromCompany;
+    if (_autoFrom) {
+        openCallModal();
+        const _name  = decodeURIComponent(_urlP.get('lead_name') || _urlP.get('company_name') || '');
+        const _phone = decodeURIComponent(_urlP.get('phone') || '');
+        if (_name)  document.getElementById('call_contact_name').value = _name;
+        if (_phone) document.getElementById('call_phone').value = _phone;
+        const ct = document.getElementById('call_contact_type');
+        ct.value = _fromLead ? 'lead' : 'customer';
+        ct.dispatchEvent(new Event('change'));
+        setTimeout(() => { document.getElementById('call_contact_id').value = _autoFrom; }, 60);
+        new bootstrap.Modal(document.getElementById('callModal')).show();
+    }
     </script>
 </body>
 </html>

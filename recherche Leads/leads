@@ -1,0 +1,33 @@
+LEAD GENERATOR WEBEXA
+
+          Pays
+           |
+           ↓
+  +----------------+
+  | Source données |
+  +----------------+
+     |       |
+     |       |
+Pages Jaunes   APIs/annuaires
+     |
+     ↓
+
+Extraction :
+- Entreprise
+- Secteur
+- Téléphone
+- Adresse
+- Site web
+- Email (si public)
+
+     ↓
+
+Analyse IA :
+- besoin CRM ?
+- besoin ERP ?
+- besoin site ?
+- besoin data/IA ?
+
+     ↓
+
+CSV

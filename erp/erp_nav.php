@@ -1,6 +1,14 @@
 
 
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+<?php
+require_once __DIR__ . '/../crm/config/database.php';
+require_once __DIR__ . '/../crm/includes/auth.php';
+requireFeature();
+$erpCan = static function ($feature) {
+  return function_exists('currentUserCan') && currentUserCan($feature);
+};
+?>
   
   <!-- ERP Topbar -->
   <?php include __DIR__ . '/includes/topbar.php'; ?>
@@ -34,13 +42,13 @@
 
       <nav class="nav-section" aria-label="Navigation principale">
         <a class="nav-link" href="index.php"><span class="icon"><i class="fas fa-chart-line"></i></span><span class="label">Dashboard</span></a>
-        <a class="nav-link" href="employees.php"><span class="icon"><i class="fas fa-users"></i></span><span class="label">Personnel</span></a>
+        <?php if ($erpCan('hr')): ?><a class="nav-link" href="employees.php"><span class="icon"><i class="fas fa-users"></i></span><span class="label">Personnel</span></a><?php endif; ?>
         <a class="nav-link" href="companies.php"><span class="icon"><i class="fas fa-building"></i></span><span class="label">Entreprises</span></a>
-        <a class="nav-link" href="missions.php"><span class="icon"><i class="fas fa-tasks"></i></span><span class="label">Missions & Projets</span></a>
-        <a class="nav-link" href="shifts.php"><span class="icon"><i class="fas fa-calendar-alt"></i></span><span class="label">Planning</span></a>
-        <a class="nav-link" href="sales.php"><span class="icon"><i class="fas fa-chart-bar"></i></span><span class="label">Ventes</span></a>
-        <a class="nav-link" href="invoices.php"><span class="icon"><i class="fas fa-file-invoice"></i></span><span class="label">Factures/Devis</span></a>
-        <a class="nav-link" href="payroll.php"><span class="icon"><i class="fas fa-file-invoice-dollar"></i></span><span class="label">Paies</span></a>
+        <?php if ($erpCan('missions')): ?><a class="nav-link" href="missions.php"><span class="icon"><i class="fas fa-tasks"></i></span><span class="label">Missions & Projets</span></a><?php endif; ?>
+        <?php if ($erpCan('planning')): ?><a class="nav-link" href="shifts.php"><span class="icon"><i class="fas fa-calendar-alt"></i></span><span class="label">Planning</span></a><?php endif; ?>
+        <?php if ($erpCan('sales')): ?><a class="nav-link" href="sales.php"><span class="icon"><i class="fas fa-chart-bar"></i></span><span class="label">Ventes</span></a><?php endif; ?>
+        <?php if ($erpCan('invoices')): ?><a class="nav-link" href="invoices.php"><span class="icon"><i class="fas fa-file-invoice"></i></span><span class="label">Factures/Devis</span></a><?php endif; ?>
+        <?php if ($erpCan('payroll')): ?><a class="nav-link" href="payroll.php"><span class="icon"><i class="fas fa-file-invoice-dollar"></i></span><span class="label">Paies</span></a><?php endif; ?>
         <a class="nav-link" href="reports.php"><span class="icon"><i class="fas fa-chart-pie"></i></span><span class="label">Rapports</span></a>
       </nav>
 

@@ -6,6 +6,7 @@ error_reporting(E_ALL);
 
 require_once __DIR__ . '/../../crm/config/database.php';
 include_once __DIR__ . '/../../crm/includes/auth.php';
+requireFeature('missions');
 
 
 

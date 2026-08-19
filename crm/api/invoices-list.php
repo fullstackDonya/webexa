@@ -4,6 +4,7 @@ session_start();
 
 try {
     require_once __DIR__ . '/../config/database.php';
+    require_once __DIR__ . '/permission-bootstrap.php';
 } catch (Throwable $e) {
     file_put_contents(__DIR__ . '/missions_error.log', "[DB include error] " . $e->getMessage() . "\n", FILE_APPEND);
     echo json_encode(['success' => false, 'error' => 'server_error']);

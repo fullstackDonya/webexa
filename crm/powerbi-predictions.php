@@ -19,12 +19,22 @@ $page_title = "Prédictions IA Power BI";
     <link href="assets/css/sb-admin-2.min.css" rel="stylesheet">
     <link href="assets/vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
     <link href="assets/css/custom.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="assets/css/style.css" rel="stylesheet">
+
 </head>
 
-<body id="page-top">
+<body>
+    
     <div class="wrapper">
+         <?php include 'includes/topbar.php'; ?>
+    
+
+        <!-- Sidebar -->
         <?php include 'includes/sidebar.php'; ?>
         
+        <!-- Main Content -->
         <div class="main-content">
             <div class="container-fluid">
                     <!-- Page Heading -->

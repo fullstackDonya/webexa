@@ -5,6 +5,21 @@ require_once __DIR__ . '/config/database.php';
 $page_title = "Gestion des Tâches - CRM";
 $customer_id = $_SESSION['customer_id'] ?? 22;
 
+// Listes pour le select "Associer à" du modal
+$modal_leads     = [];
+$modal_companies = [];
+try {
+    $s = $pdo->prepare("SELECT id, CONCAT(first_name,' ',last_name) AS label FROM leads WHERE customer_id = ? ORDER BY first_name LIMIT 300");
+    $s->execute([$customer_id]);
+    $modal_leads = $s->fetchAll(PDO::FETCH_ASSOC);
+} catch (Throwable $e) {}
+try {
+    $s = $pdo->prepare("SELECT id, name AS label FROM companies WHERE customer_id = ? ORDER BY name LIMIT 300");
+    $s->execute([$customer_id]);
+    $modal_companies = $s->fetchAll(PDO::FETCH_ASSOC);
+} catch (Throwable $e) {}
+$from_lead = isset($_GET['from_lead']) ? intval($_GET['from_lead']) : 0;
+
 // Récupérer les statistiques
 $statsQuery = $pdo->prepare("
     SELECT 
@@ -480,6 +495,25 @@ $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <option value="cancelled">Annulée</option>
                             </select>
                         </div>
+
+                        <!-- Associer à un lead ou un client -->
+                        <div class="mb-3">
+                            <label class="form-label">Associer à</label>
+                            <div class="row g-2">
+                                <div class="col-5">
+                                    <select class="form-select" id="task_related_type">
+                                        <option value="">-- Aucun --</option>
+                                        <option value="lead">Lead</option>
+                                        <option value="company">Client</option>
+                                    </select>
+                                </div>
+                                <div class="col-7">
+                                    <select class="form-select" id="task_related_id" disabled>
+                                        <option value="">-- Sélectionner --</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
@@ -496,6 +530,24 @@ $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     
     <script>
+    // Données pour les selects du modal (injectées depuis PHP)
+    const LEADS_DATA     = <?php echo json_encode($modal_leads, JSON_UNESCAPED_UNICODE); ?>;
+    const COMPANIES_DATA = <?php echo json_encode($modal_companies, JSON_UNESCAPED_UNICODE); ?>;
+
+    // Peupler le select related_id selon le type choisi
+    document.getElementById('task_related_type').addEventListener('change', function () {
+        const relatedId = document.getElementById('task_related_id');
+        relatedId.innerHTML = '<option value="">-- Sélectionner --</option>';
+        const list = this.value === 'lead' ? LEADS_DATA : this.value === 'company' ? COMPANIES_DATA : [];
+        list.forEach(item => {
+            const opt = document.createElement('option');
+            opt.value = item.id;
+            opt.textContent = item.label;
+            relatedId.appendChild(opt);
+        });
+        relatedId.disabled = (list.length === 0);
+    });
+
     // Sauvegarder un champ inline
     function saveFieldInline(element) {
         const taskId = element.dataset.taskId;
@@ -546,6 +598,9 @@ $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
         document.getElementById('taskModalTitle').textContent = 'Nouvelle Tâche';
         document.getElementById('taskForm').reset();
         document.getElementById('task_id').value = '';
+        document.getElementById('task_related_type').value = '';
+        document.getElementById('task_related_id').innerHTML = '<option value="">-- Sélectionner --</option>';
+        document.getElementById('task_related_id').disabled = true;
     }
     
     // Éditer une tâche
@@ -561,6 +616,13 @@ $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     document.getElementById('task_description').value = task.description || '';
                     document.getElementById('task_priority').value = task.priority;
                     document.getElementById('task_status').value = task.status;
+
+                    // Remplir le champ Associer à
+                    const relType = document.getElementById('task_related_type');
+                    const relId   = document.getElementById('task_related_id');
+                    relType.value = task.related_type || '';
+                    relType.dispatchEvent(new Event('change'));
+                    if (task.related_id) { relId.value = task.related_id; }
                     
                     if (task.due_date) {
                         const date = new Date(task.due_date);
@@ -607,6 +669,8 @@ $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
         formData.forEach((value, key) => {
             data[key] = value;
         });
+        data['related_type'] = document.getElementById('task_related_type').value || null;
+        data['related_id']   = document.getElementById('task_related_id').value   || null;
         
         fetch('api/tasks.php', {
             method: 'POST',
@@ -626,6 +690,19 @@ $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
             alert('Erreur lors de l\'enregistrement');
         });
     });
+    // Auto-ouvrir le modal si redirigé depuis leads.php ou customers.php
+    const _urlP        = new URLSearchParams(window.location.search);
+    const _fromLead    = _urlP.get('from_lead');
+    const _fromCompany = _urlP.get('from_company');
+    const _autoFrom    = _fromLead || _fromCompany;
+    if (_autoFrom) {
+        openTaskModal();
+        const rt = document.getElementById('task_related_type');
+        rt.value = _fromLead ? 'lead' : 'company';
+        rt.dispatchEvent(new Event('change'));
+        setTimeout(() => { document.getElementById('task_related_id').value = _autoFrom; }, 60);
+        new bootstrap.Modal(document.getElementById('taskModal')).show();
+    }
     </script>
 </body>
 </html>

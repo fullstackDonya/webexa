@@ -33,14 +33,14 @@ include("includes/leads-import.php");
                                 <h6 class="m-0 font-weight-bold text-primary">Importer depuis un fichier CSV</h6>
                             </div>
                             <div class="card-body">
-                                <div class="alert alert-info">
-                                    <i class="fas fa-info-circle"></i>
-                                    <strong>Format requis :</strong> Colonnes : first_name, last_name, email, phone, company, position, source, status, budget
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-lightbulb"></i>
+                                    <strong>Import flexible :</strong> Tous les champs sont optionnels. Import même si incomplet - vous pourrez compléter manuellement.
                                 </div>
                                 <form id="import-form" enctype="multipart/form-data" method="post" action="">
                                     <div class="mb-3">
                                         <label for="csv_file" class="form-label">Fichier CSV *</label>
-                                        <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv" required>
+                                        <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv,.xlsx,.xls,.doc,.docx,.pdf" required>
                                     </div>
                                     <div class="mb-3">
                                         <div class="form-check">
@@ -71,13 +71,37 @@ include("includes/leads-import.php");
                     <div class="col-lg-4">
                         <div class="card shadow">
                             <div class="card-header">
-                                <h6 class="m-0 font-weight-bold text-primary">Guide d'import</h6>
+                                <h6 class="m-0 font-weight-bold text-primary">Colonnes supportées</h6>
                             </div>
-                            <div class="card-body">
-                                <ul class="small text-muted">
-                                    <li>Les champs <strong>first_name</strong>, <strong>last_name</strong> et <strong>email</strong> sont requis</li>
-                                    <li>La colonne <strong>status</strong> accepte: new, contacted, qualified, unqualified</li>
-                                </ul>
+                            <div class="card-body small">
+                                <div class="mb-3">
+                                    <strong class="text-success">Identifiant minimum :</strong>
+                                    <ul class="mb-2">
+                                        <li>email OU</li>
+                                        <li>phone OU</li>
+                                        <li>first_name + company</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <strong class="text-primary">Champs optionnels :</strong>
+                                    <ul class="list-unstyled small text-muted">
+                                        <li>✓ first_name, last_name</li>
+                                        <li>✓ email</li>
+                                        <li>✓ phone, phone2, phone3 (jusqu'à 3 numéros)</li>
+                                        <li>✓ company, display_name</li>
+                                        <li>✓ position</li>
+                                        <li>✓ secteur_activite, activity</li>
+                                        <li>✓ address (adresse)</li>
+                                        <li>✓ heures_ouverture (horaires, hours, bi-hours)</li>
+                                        <li>✓ url (website)</li>
+                                        <li>✓ tags (noms alternatifs)</li>
+                                        <li>✓ description, notes</li>
+                                        <li>✓ source, status, budget</li>
+                                    </ul>
+                                </div>
+                                <div class="mt-3 alert alert-light">
+                                    <small><strong>Alias :</strong> Les variantes en français et anglais sont acceptées.</small>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -1,5 +1,9 @@
 <?php
 
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 require_once __DIR__ . '/verify_subscriptions.php';
 
 $customer_id = $_SESSION['customer_id'] ?? null;
@@ -68,7 +72,7 @@ try {
 try {
     // List leads joined with company name if available
     if ($customer_id) {
-        $sql = "SELECT c.id, c.first_name, c.last_name, c.email, c.stage, c.source, c.created_at, c.ai_score, co.name AS company_name
+        $sql = "SELECT c.id, c.first_name, c.last_name, c.email, c.phone, c.stage, c.source, c.tags, c.created_at, c.ai_score, c.company_id, co.name AS company_name
                 FROM leads c
                 LEFT JOIN companies co ON c.company_id = co.id
                 WHERE (c.customer_id = ? OR c.assigned_to = ?)
@@ -76,7 +80,7 @@ try {
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$customer_id, $user_id]);
     } else {
-        $sql = "SELECT c.id, c.first_name, c.last_name, c.email, c.stage, c.source, c.created_at, c.ai_score, co.name AS company_name
+        $sql = "SELECT c.id, c.first_name, c.last_name, c.email, c.phone, c.stage, c.source, c.tags, c.created_at, c.ai_score, c.company_id, co.name AS company_name
                 FROM leads c
                 LEFT JOIN companies co ON c.company_id = co.id
                 ORDER BY c.created_at DESC LIMIT 200";
@@ -85,4 +89,18 @@ try {
     $leads_list = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 } catch (Throwable $e) {
     $leads_list = [];
+}
+
+// IDs des leads déjà convertis en opportunité
+$lead_opportunity_ids = [];
+try {
+    if ($customer_id) {
+        $s = $pdo->prepare("SELECT DISTINCT lead_id FROM opportunities WHERE lead_id IS NOT NULL AND customer_id = ?");
+        $s->execute([$customer_id]);
+    } else {
+        $s = $pdo->query("SELECT DISTINCT lead_id FROM opportunities WHERE lead_id IS NOT NULL");
+    }
+    $lead_opportunity_ids = array_column($s->fetchAll(PDO::FETCH_ASSOC), 'lead_id');
+} catch (Throwable $e) {
+    $lead_opportunity_ids = [];
 }

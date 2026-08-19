@@ -1,8 +1,13 @@
 <?php
 // filepath: /Applications/MAMP/htdocs/PP/webitech/WEB/crm/api/customer-analytics.php
 
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 header('Content-Type: application/json');
-require_once '../includes/verify_subscriptions.php';
+require_once '../includes/auth.php';
+require_once '../config/database.php';
 
 // Vérification de l'authentification
 if (!isset($_SESSION['customer_id'])) {
@@ -92,6 +97,50 @@ try {
     $stmt->execute([':customer_id' => $customer_id]);
     $companies = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    $stmt = $pdo->prepare("
+        SELECT status, COUNT(*) AS count
+        FROM companies
+        WHERE customer_id = :customer_id
+        AND interne_customer = 0
+        GROUP BY status
+    ");
+
+    $stmt->execute([
+        ':customer_id' => $customer_id
+    ]);
+
+    $statusCounts = [];
+    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        $statusCounts[$row['status']] = (int)$row['count'];
+    }
+
+    $customerJourney = [
+        [
+            'label' => 'Découverte',
+            'count' => $statusCounts['prospect'] ?? 0
+        ],
+        [
+            'label' => 'Considération',
+            'count' => $statusCounts['prospect'] ?? 0
+        ],
+        [
+            'label' => 'Achat',
+            'count' => $statusCounts['client'] ?? 0
+        ],
+        [
+            'label' => 'Satisfaction',
+            'count' => $statusCounts['client'] ?? 0
+        ],
+        [
+            'label' => 'Fidélisation',
+            'count' => $statusCounts['client'] ?? 0
+        ],
+        [
+            'label' => 'Ambassadeur',
+            'count' => $statusCounts['partner'] ?? 0
+        ]
+    ];
+
     echo json_encode([
         'success' => true,
         'metrics' => [
@@ -104,7 +153,10 @@ try {
         'segments' => $segments,
         'rfm' => $rfm,
         'churn' => $churn,
-        'companies' => $companies
+        // 'companies' => $companies,
+        'customers' => $companies,
+        'customer_journey' => $customerJourney
+        
     ]);
 } catch (Exception $e) {
     echo json_encode([

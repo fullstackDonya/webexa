@@ -1,4 +1,7 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 session_start();
 require_once __DIR__ . '/../config/database.php';
 
@@ -124,7 +127,7 @@ function saveCompany($pdo, $user_id, $data) {
         $stmt->execute([$data['company_name'] ?? '', $customer_id]);
 
         // Check if company exists
-        $stmt = $pdo->prepare("SELECT id FROM companies WHERE customer_id = ? LIMIT 1");
+        $stmt = $pdo->prepare("SELECT id FROM companies WHERE customer_id = ? AND interne_customer = 1 LIMIT 1");
         $stmt->execute([$customer_id]);
         $company_id = $stmt->fetchColumn();
 

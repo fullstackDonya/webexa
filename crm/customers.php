@@ -169,10 +169,47 @@ $avg_revenue_calculated = $total_clients > 0 ? $total_revenue / $total_clients :
                                             ?>
                                         </td>
                                         <td class="readonly">
-                                            <div class="actions-group">
-                                                <a href="customers-view.php?id=<?php echo $customer['id']; ?>" class="btn btn-sm btn-info" title="Voir"><i class="fas fa-eye"></i></a>
-                                                <a href="customers-edit.php?id=<?php echo $customer['id']; ?>" class="btn btn-sm btn-warning" title="Éditer"><i class="fas fa-edit"></i></a>
-                                                <a href="customers-delete.php?id=<?php echo $customer['id']; ?>" class="btn btn-sm btn-danger" title="Supprimer" onclick="return confirm('Supprimer ce client ?');"><i class="fas fa-trash"></i></a>
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="fas fa-ellipsis-h"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                                    <li>
+                                                        <a class="dropdown-item" href="customers-view.php?id=<?php echo $customer['id']; ?>" title="Voir">
+                                                            <i class="fas fa-eye text-info me-2"></i> Voir
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item" href="customers-edit.php?id=<?php echo $customer['id']; ?>" title="Éditer">
+                                                            <i class="fas fa-edit text-warning me-2"></i> Éditer
+                                                        </a>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider my-1"></li>
+                                                    <li>
+                                                        <a class="dropdown-item"
+                                                           href="tasks.php?from_company=<?php echo intval($customer['id']); ?>&amp;company_name=<?php echo urlencode($customer['name'] ?? ''); ?>"
+                                                           title="Créer une tâche pour ce client">
+                                                            <i class="fas fa-tasks text-secondary me-2"></i> Tâche
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item"
+                                                           href="calls.php?from_company=<?php echo intval($customer['id']); ?>&amp;company_name=<?php echo urlencode($customer['name'] ?? ''); ?>&amp;phone=<?php echo urlencode($customer['phone'] ?? ''); ?>"
+                                                           title="Planifier un appel pour ce client">
+                                                            <i class="fas fa-phone text-success me-2"></i> Appel
+                                                        </a>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider my-1"></li>
+                                                    <li>
+                                                        <a class="dropdown-item text-danger"
+                                                           href="customers-delete.php?id=<?php echo $customer['id']; ?>"
+                                                           title="Supprimer"
+                                                           onclick="return confirm('Supprimer ce client ?');">
+                                                            <i class="fas fa-trash me-2"></i> Supprimer
+                                                        </a>
+                                                    </li>
+                                                </ul>
                                             </div>
                                         </td>
                                     </tr>

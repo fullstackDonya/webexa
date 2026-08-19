@@ -4,6 +4,7 @@
  */
 
 header('Content-Type: application/json');
+require_once __DIR__ . '/permission-bootstrap.php';
 
 // Connexion à la base de données
 try {

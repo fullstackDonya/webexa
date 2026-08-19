@@ -185,7 +185,7 @@ try {
                         ?>
                         <div class="funnel-stage stage-4" style="width: <?php echo $width4; ?>%;">
                             <div class="stage-label">
-                                <div class="stage-title">Clients</div>
+                                <div class="stage-title">facturations clients</div>
                                 <div class="stage-count"><?php echo $funnel_data['clients']; ?></div>
                                 <div class="stage-percent"><?php echo round($percent4, 1); ?>%</div>
                             </div>
@@ -352,6 +352,7 @@ try {
     <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="assets/vendor/jquery-easing/jquery.easing.min.js"></script>
     <script src="assets/js/sb-admin-2.min.js"></script>
+    <script src="assets/js/analytics-funnel.js"></script>
     
     <script>
     function exportFunnelReport() {

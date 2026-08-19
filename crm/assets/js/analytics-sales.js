@@ -15,6 +15,30 @@ document.addEventListener('DOMContentLoaded', function () {
     let productChart = null;
     let teamChart = null;
     let seasonalChart = null;
+    let currentSource = "opportunities";
+
+    const sourceButtons = Array.from(
+        document.querySelectorAll('#salesSourceSwitcher [data-source]')
+    );
+  
+    const title = document.getElementById('sales-chart-title');
+
+
+    if(title){
+
+        if(currentSource === "missions"){
+            title.textContent="Évolution des Missions";
+        }
+
+        else if(currentSource === "erp_sales"){
+            title.textContent="Évolution des Ventes ERP";
+        }
+
+        else{
+            title.textContent="Opportunités gagnées";
+        }
+
+    }
 
     // helper safe set
     function safeText(el, v) { if (!el) return; el.textContent = v; }
@@ -73,22 +97,46 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     async function fetchData(period = 'month') {
-        const params = new URLSearchParams({ period });
+
+        const params = new URLSearchParams({
+            period: period,
+            source: currentSource
+        });
+
+
         const url = endpointBase + '?' + params.toString();
+
+        console.log("API :", url);
+
         try {
-            const res = await fetch(url, { cache: 'no-store' });
-            if (!res.ok) throw new Error('HTTP ' + res.status);
+
+            const res = await fetch(url, {
+                cache:'no-store'
+            });
+
+
+            if (!res.ok)
+                throw new Error('HTTP ' + res.status);
+
+
             const data = await res.json();
+
             return data;
-        } catch (err) {
-            console.error('Erreur fetch sales-data:', err);
+
+
+        } catch(err){
+
+            console.error(
+                'Erreur fetch sales-data:',
+                err
+            );
+
             return null;
         }
     }
 
     async function loadAndRender(period = 'month') {
-        // visual feedback
-        periodButtons.forEach(b => b.classList.toggle('active', b.dataset.period === period || (period === 'month' && b.dataset.period === '30d')));
+    
         const data = await fetchData(mapPeriod(period));
         if (!data) {
             // affichage d'erreur simple
@@ -98,10 +146,94 @@ document.addEventListener('DOMContentLoaded', function () {
             safeText(elGoal, '—');
             if (tableBody) tableBody.innerHTML = '<tr><td colspan="7">Impossible de charger les données.</td></tr>';
             return;
-        }
+        } 
 
         // API older format: if stats exists, use it; else fallback to metrics naming
         const stats = data.stats || data.metrics || {};
+
+        const growth = Number(stats.growth_rate || 0);
+
+        function renderGrowth(elementId, value){
+
+            const el = document.getElementById(elementId);
+
+            if(!el) return;
+
+
+            if(value > 0){
+
+                el.className = "text-xs text-success";
+
+                el.innerHTML =
+                `<i class="fas fa-arrow-up"></i> +${value}% vs période précédente`;
+
+            }
+            else if(value < 0){
+
+                el.className = "text-xs text-danger";
+
+                el.innerHTML =
+                `<i class="fas fa-arrow-down"></i> ${value}% vs période précédente`;
+
+            }
+            else{
+
+                el.className = "text-xs text-muted";
+
+                el.innerHTML =
+                `<i class="fas fa-minus"></i> 0% vs période précédente`;
+
+            }
+
+        }
+
+
+        renderGrowth('sales-growth', growth);
+        renderGrowth('count-growth', growth);
+        renderGrowth('avg-growth', growth);
+        if(data.kpi_labels){
+
+            const tableHeaders = document.querySelectorAll('#salesAnalysisTable thead th');
+
+
+            if(currentSource === "missions"){
+
+                tableHeaders[1].textContent = "Montant missions (€)";
+                tableHeaders[2].textContent = "Nombre missions";
+                tableHeaders[3].textContent = "Prix moyen";
+
+            }
+            else if(currentSource === "erp_sales"){
+
+                tableHeaders[1].textContent = "CA ERP (€)";
+                tableHeaders[2].textContent = "Nombre ventes";
+                tableHeaders[3].textContent = "Ticket moyen";
+
+            }
+            else{
+
+                tableHeaders[1].textContent = "Ventes (€)";
+                tableHeaders[2].textContent = "Opportunités";
+                tableHeaders[3].textContent = "Valeur moyenne";
+
+            }
+
+            safeText(
+                document.getElementById('kpi-total-label'),
+                data.kpi_labels.total
+            );
+
+            safeText(
+                document.getElementById('kpi-count-label'),
+                data.kpi_labels.count
+            );
+
+            safeText(
+                document.getElementById('kpi-avg-label'),
+                data.kpi_labels.avg
+            );
+
+        }
         const labels = data.labels || [];
         const sales = data.sales || data.series || [];
 
@@ -110,6 +242,26 @@ document.addEventListener('DOMContentLoaded', function () {
         safeText(elAvg, stats.avg_deal_size ? '€' + Number(stats.avg_deal_size).toLocaleString('fr-FR') : '€0');
         safeText(elGoal, (stats.goal_achieved ?? Math.round((stats.total_sales ?? 0) ? (100 * (stats.total_sales / (stats.goal ?? stats.total_sales))) : 0)) + '%');
 
+        const progress = document.getElementById('goal-progress');
+
+        if(progress){
+
+            let percent = Number(
+                stats.goal_achieved ??
+                (
+                    stats.goal 
+                    ? (stats.total_sales / stats.goal) * 100 
+                    : 0
+                )
+            );
+
+            // limite entre 0 et 100
+            percent = Math.min(Math.max(percent, 0), 100);
+
+            progress.style.width = percent + "%";
+            progress.setAttribute('aria-valuenow', percent);
+
+        }
         // create charts (products/team might be absent in this API -> pass empty arrays)
         createCharts(labels, sales, data.products || [], data.team || []);
 
@@ -121,9 +273,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     <td>€${Number(r.sales || 0).toLocaleString('fr-FR')}</td>
                     <td>${Number(r.count || 0)}</td>
                     <td>€${Number(r.avg || 0).toLocaleString('fr-FR')}</td>
-                    <td><span class="text-success">${escapeHtml(r.growth || '')}</span></td>
-                    <td>${escapeHtml(r.top_product || '')}</td>
-                    <td>${escapeHtml(r.top_salesperson || '')}</td>
+                    <td>
+                    <span class="text-success">
+                        ${escapeHtml(r.growth || '')}
+                    </span>
+                    </td>
+                    <td>${escapeHtml(r.top_product || '-')}</td>
+                    <td>${escapeHtml(r.top_salesperson || '-')}</td>
                 </tr>
             `).join('');
         }
@@ -146,6 +302,29 @@ document.addEventListener('DOMContentLoaded', function () {
             const p = btn.dataset.period;
             loadAndRender(p);
         });
+    });
+
+    // Switch entre opportunités / ventes ERP / missions
+
+    sourceButtons.forEach(btn => {
+
+        btn.addEventListener('click', () => {
+            currentSource = btn.dataset.source;
+            sourceButtons.forEach(b => {
+                b.classList.remove('active','btn-primary');
+
+                b.classList.add('btn-outline-primary');
+            });
+
+            btn.classList.add('active');
+
+            btn.classList.remove('btn-outline-primary');
+
+            btn.classList.add('btn-primary');
+
+            loadAndRender('30d');
+        });
+
     });
 
     // expose refresh/export used by page buttons

@@ -99,6 +99,18 @@ $page_title = "Consulter Lead - CRM Intelligent";
 
                                 <div class="row mb-3">
                                     <div class="col-md-6">
+                                        <label class="text-muted small">Téléphone +</label>
+                                        <p><a href="mailto:<?php echo htmlspecialchars($lead['phone2'] ?? ''); ?>"><?php echo htmlspecialchars($lead['phone2'] ?? '--'); ?></a></p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="text-muted small">Téléphone +</label>
+                                        <p><?php echo htmlspecialchars($lead['phone2'] ?? '--'); ?></p>
+                                    </div>
+                                </div>
+
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
                                         <label class="text-muted small">Poste</label>
                                         <p><?php echo htmlspecialchars($lead['position'] ?? '--'); ?></p>
                                     </div>
@@ -107,6 +119,30 @@ $page_title = "Consulter Lead - CRM Intelligent";
                                         <p><?php echo htmlspecialchars($lead['company_name'] ?? '--'); ?></p>
                                     </div>
                                 </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="text-muted small">Tags</label>
+                                        <p><?php echo htmlspecialchars($lead['tags'] ?? '--'); ?></p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="text-muted small">Secteur d'activité</label>
+                                        <p><?php echo htmlspecialchars($lead['sector'] ?? '--'); ?></p>
+                                    </div>
+                                </div>
+
+                                   <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="text-muted small">Heure d'ouverture</label>
+                                        <p><?php echo htmlspecialchars($lead['opening_hours'] ?? '--'); ?></p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="text-muted small">Description</label>
+                                        <p><?php echo htmlspecialchars($lead['description'] ?? '--'); ?></p>
+                                    </div>
+                                </div>
+                              
+
 
                                 <hr>
 

@@ -1,8 +1,7 @@
 <?php
 /**
  * Webexa - Unified Authentication & Onboarding Page
- * Consolidated login, register, and setup-wizard into single elegant interface
- * Design: Monday.com-inspired (professional, white, clean)
+ * Design: Monday.com-inspired professional SaaS interface
  */
 
 ini_set('display_errors', 1);
@@ -13,954 +12,513 @@ session_start();
 require_once __DIR__ . '/crm/config/database.php';
 require_once __DIR__ . '/crm/includes/auth.php';
 
-// Check if user is already authenticated and onboarded
 if (isAuthenticated()) {
     $user_id = $_SESSION['user_id'];
     $stmt = $pdo->prepare("SELECT onboarding_completed FROM users WHERE id = ?");
     $stmt->execute([$user_id]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
-    
     if ($user && $user['onboarding_completed']) {
         header('Location: crm/index.php');
         exit;
     }
 }
 
-// Get mode from request or session
 $mode = $_GET['mode'] ?? $_SESSION['auth_mode'] ?? 'welcome';
 $_SESSION['auth_mode'] = $mode;
 
-// Prepare OAuth redirect URIs
-$google_oauth_url = '#'; // Será manejado por JavaScript
-$microsoft_oauth_url = '#'; // Será manejado por JavaScript
-
+// Lire le dernier compte Google (cookie non-sensible)
+$lastGoogleAccount = null;
+if (!empty($_COOKIE['last_google_account'])) {
+    $decoded = json_decode($_COOKIE['last_google_account'], true);
+    if (!empty($decoded['email']) && !empty($decoded['name'])) {
+        $lastGoogleAccount = $decoded;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Webexa - CRM & ERP Platform</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-            background: #f7f8fa;
-            color: #333;
-            line-height: 1.6;
-        }
-
-        .container {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        /* Left Sidebar - Feature Showcase */
-        .sidebar {
-            flex: 1;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 60px 40px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            color: white;
-        }
-
-        .logo {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 60px;
-            letter-spacing: -0.5px;
-        }
-
-        .features {
-            flex: 1;
-        }
-
-        .feature {
-            margin-bottom: 40px;
-        }
-
-        .feature-icon {
-            width: 50px;
-            height: 50px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            margin-bottom: 15px;
-        }
-
-        .feature h3 {
-            font-size: 18px;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-
-        .feature p {
-            font-size: 14px;
-            opacity: 0.9;
-            line-height: 1.5;
-        }
-
-        .footer-text {
-            font-size: 13px;
-            opacity: 0.7;
-        }
-
-        /* Right Panel - Auth Section */
-        .auth-panel {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 40px;
-            background: white;
-        }
-
-        .auth-container {
-            width: 100%;
-            max-width: 420px;
-        }
-
-        .auth-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .auth-header h1 {
-            font-size: 28px;
-            margin-bottom: 10px;
-            font-weight: 700;
-        }
-
-        .auth-header p {
-            color: #666;
-            font-size: 14px;
-        }
-
-        /* Welcome Screen */
-        .screen.welcome {
-            text-align: center;
-        }
-
-        .welcome-buttons {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .welcome-buttons button {
-            flex: 1;
-            padding: 14px;
-            border: none;
-            border-radius: 8px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .btn-signin {
-            background: #667eea;
-            color: white;
-        }
-
-        .btn-signin:hover {
-            background: #5568d3;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.2);
-        }
-
-        .btn-signup {
-            background: #f0f1f5;
-            color: #333;
-            border: 2px solid #e0e1e6;
-        }
-
-        .btn-signup:hover {
-            background: #e8e9f0;
-            transform: translateY(-2px);
-        }
-
-        .welcome-text {
-            color: #666;
-            margin-bottom: 30px;
-            line-height: 1.8;
-        }
-
-        .divider {
-            display: flex;
-            align-items: center;
-            margin: 30px 0;
-            color: #999;
-        }
-
-        .divider::before,
-        .divider::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: #e0e1e6;
-        }
-
-        .divider span {
-            padding: 0 12px;
-            font-size: 13px;
-        }
-
-        /* Form Styles */
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            font-size: 14px;
-            color: #333;
-        }
-
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 12px 14px;
-            border: 1px solid #e0e1e6;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: all 0.3s ease;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        /* OAuth Buttons */
-        .oauth-buttons {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .oauth-btn {
-            flex: 1;
-            padding: 12px;
-            border: 1px solid #e0e1e6;
-            border-radius: 8px;
-            background: white;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .oauth-btn:hover {
-            background: #f7f8fa;
-            border-color: #667eea;
-        }
-
-        /* Wizard Steps */
-        .wizard-steps {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 30px;
-            justify-content: center;
-        }
-
-        .step {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #e0e1e6;
-            transition: all 0.3s ease;
-        }
-
-        .step.active {
-            background: #667eea;
-            width: 30px;
-        }
-
-        /* Buttons */
-        .btn {
-            width: 100%;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 10px;
-        }
-
-        .btn-primary {
-            background: #667eea;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #5568d3;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.2);
-        }
-
-        .btn-primary:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .btn-secondary {
-            background: transparent;
-            color: #667eea;
-            border: 2px solid #667eea;
-        }
-
-        .btn-secondary:hover {
-            background: rgba(102, 126, 234, 0.05);
-        }
-
-        /* Navigation */
-        .nav-buttons {
-            display: flex;
-            gap: 12px;
-            margin-top: 20px;
-        }
-
-        .nav-buttons button {
-            flex: 1;
-            padding: 12px;
-            border: 1px solid #e0e1e6;
-            background: white;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            color: #667eea;
-            transition: all 0.3s ease;
-        }
-
-        .nav-buttons button:hover {
-            border-color: #667eea;
-            background: rgba(102, 126, 234, 0.05);
-        }
-
-        /* Module Selection */
-        .modules-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .module-item {
-            padding: 15px;
-            border: 2px solid #e0e1e6;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
-            position: relative;
-        }
-
-        .module-item input[type="checkbox"] {
-            position: absolute;
-            opacity: 0;
-        }
-
-        .module-item input[type="checkbox"]:checked + label {
-            color: #667eea;
-        }
-
-        .module-item.selected {
-            background: rgba(102, 126, 234, 0.05);
-            border-color: #667eea;
-        }
-
-        .module-item label {
-            cursor: pointer;
-            display: block;
-            font-weight: 600;
-        }
-
-        /* Error/Success Messages */
-        .message {
-            padding: 12px 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-
-        .message.error {
-            background: #fee;
-            color: #c33;
-            border: 1px solid #fcc;
-        }
-
-        .message.success {
-            background: #efe;
-            color: #3c3;
-            border: 1px solid #cfc;
-        }
-
-        .message.info {
-            background: #eef;
-            color: #33c;
-            border: 1px solid #ccf;
-        }
-
-        /* Loading State */
-        .loading {
-            display: inline-block;
-            width: 14px;
-            height: 14px;
-            border: 2px solid #f3f3f3;
-            border-top: 2px solid #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Hidden screens */
-        .screen {
-            display: none;
-        }
-
-        .screen.active {
-            display: block;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Responsive */
-        @media (max-width: 1024px) {
-            .sidebar {
-                flex: 0.8;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                flex-direction: column;
-            }
-
-            .sidebar {
-                padding: 40px 30px;
-                min-height: auto;
-            }
-
-            .feature {
-                margin-bottom: 30px;
-            }
-
-            .auth-panel {
-                padding: 30px 20px;
-                min-height: auto;
-            }
-
-            .modules-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Help text */
-        .form-help {
-            font-size: 12px;
-            color: #999;
-            margin-top: 5px;
-        }
-
-        .back-link {
-            color: #667eea;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            display: inline-block;
-            transition: color 0.3s ease;
-        }
-
-        .back-link:hover {
-            color: #5568d3;
-        }
-    </style>
+    <title>Webexa — CRM & ERP Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/index.css">
 </head>
 <body>
-    <div class="container">
-        <!-- Left Sidebar -->
-        <div class="sidebar">
-            <div>
-                <div class="logo">🚀 Webexa</div>
-                <div class="features">
-                    <div class="feature">
-                        <div class="feature-icon">📊</div>
-                        <h3>CRM Puissant</h3>
-                        <p>Gérez vos contacts, leads et opportunités de vente en toute facilité</p>
-                    </div>
-                    <div class="feature">
-                        <div class="feature-icon">⚙️</div>
-                        <h3>ERP Complet</h3>
-                        <p>Automatisez vos processus métier et optimisez vos opérations</p>
-                    </div>
-                    <div class="feature">
-                        <div class="feature-icon">🤖</div>
-                        <h3>IA Avancée</h3>
-                        <p>Analysez vos données et obtenez des insights intelligents</p>
+<div class="page-wrapper">
+
+    <!-- ══ LEFT HERO PANEL ══ -->
+    <div class="hero-panel">
+        <div class="brand">
+            <div class="brand-icon">🚀</div>
+            <span class="brand-name">Webexa</span>
+        </div>
+
+        <div class="hero-content">
+            <div class="hero-tag">
+                <i class="fas fa-bolt"></i> Plateforme SaaS N°1 en France
+            </div>
+            <h1 class="hero-title">
+                Gérez votre<br>entreprise avec<br><span>l'intelligence</span>
+            </h1>
+            <p class="hero-subtitle">
+                CRM, ERP et IA réunis dans une seule plateforme. Suivez vos leads, automatisez vos processus et prenez de meilleures décisions.
+            </p>
+
+            <div class="feature-list">
+                <div class="feature-item">
+                    <div class="feature-icon purple">📊</div>
+                    <div class="feature-text">
+                        <h4>CRM Intelligent</h4>
+                        <p>Pipeline visuel, scoring IA, suivi des opportunités en temps réel</p>
                     </div>
                 </div>
-            </div>
-            <div class="footer-text">
-                © 2024 Webexa. Tous droits réservés.
+                <div class="feature-item">
+                    <div class="feature-icon pink">⚙️</div>
+                    <div class="feature-text">
+                        <h4>ERP Intégré</h4>
+                        <p>Facturation, inventaire, RH — tout centralisé en un seul endroit</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon teal">🤖</div>
+                    <div class="feature-text">
+                        <h4>IA & Automatisations</h4>
+                        <p>Workflows intelligents et insights prédictifs pour votre croissance</p>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Right Auth Panel -->
-        <div class="auth-panel">
-            <div class="auth-container">
-                <!-- WELCOME SCREEN -->
-                <div class="screen welcome active">
-                    <div class="auth-header">
-                        <h1>Bienvenue</h1>
-                        <p>Commencez à gérer votre entreprise avec Webexa</p>
-                    </div>
-
-                    <div class="welcome-text">
-                        <p>Webexa est une plateforme complète de gestion d'entreprise combinant CRM, ERP et intelligence artificielle.</p>
-                    </div>
-
-                    <div class="welcome-buttons">
-                        <button class="btn-signin" onclick="switchScreen('login')">Se connecter</button>
-                        <button class="btn-signup" onclick="switchScreen('signup-step1')">S'inscrire</button>
-                    </div>
-
-                    <div class="divider">
-                        <span>ou</span>
-                    </div>
-
-                    <div class="oauth-buttons">
-                        <button class="oauth-btn" onclick="loginWithGoogle()">
-                            <span>🔵</span> Google
-                        </button>
-                        <button class="oauth-btn" onclick="loginWithMicrosoft()">
-                            <span>🟦</span> Microsoft
-                        </button>
-                    </div>
-                </div>
-
-                <!-- LOGIN SCREEN -->
-                <div class="screen login">
-                    <div onclick="switchScreen('welcome')" class="back-link">← Retour</div>
-                    <div class="auth-header">
-                        <h1>Se connecter</h1>
-                        <p>Accédez à votre compte Webexa</p>
-                    </div>
-
-                    <div id="login-message"></div>
-
-                    <form id="login-form" onsubmit="handleLogin(event)">
-                        <div class="form-group">
-                            <label>Email</label>
-                            <input type="email" name="email" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Mot de passe</label>
-                            <input type="password" name="password" required>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary">Connexion</button>
-                    </form>
-
-                    <div style="text-align: center; margin-top: 20px;">
-                        <span style="color: #999; font-size: 14px;">Pas encore de compte? </span>
-                        <a href="#" onclick="switchScreen('signup-step1'); return false;" style="color: #667eea; font-weight: 600; text-decoration: none;">S'inscrire</a>
-                    </div>
-                </div>
-
-                <!-- SIGNUP STEP 1: Account -->
-                <div class="screen signup-step1">
-                    <div class="wizard-steps">
-                        <div class="step active"></div>
-                        <div class="step"></div>
-                        <div class="step"></div>
-                    </div>
-
-                    <div class="auth-header">
-                        <h1>Créer un compte</h1>
-                        <p>Étape 1 sur 3 - Vos informations personnelles</p>
-                    </div>
-
-                    <div id="signup-message"></div>
-
-                    <form id="signup-form-step1" onsubmit="handleSignupStep1(event)">
-                        <div class="form-group">
-                            <label>Prénom</label>
-                            <input type="text" name="first_name" id="first_name" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Nom</label>
-                            <input type="text" name="last_name" id="last_name" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Email</label>
-                            <input type="email" name="email" id="signup_email" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Mot de passe</label>
-                            <input type="password" name="password" id="signup_password" required>
-                            <div class="form-help">Au moins 8 caractères</div>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Confirmer le mot de passe</label>
-                            <input type="password" name="password_confirm" id="password_confirm" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Poste</label>
-                            <input type="text" name="position" id="position">
-                        </div>
-
-                        <div class="form-group">
-                            <label>Téléphone</label>
-                            <input type="tel" name="phone" id="phone">
-                        </div>
-
-                        <div class="nav-buttons">
-                            <button type="button" class="btn btn-secondary" onclick="switchScreen('welcome')">Annuler</button>
-                            <button type="submit" class="btn btn-primary">Suivant</button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- SIGNUP STEP 2: Company -->
-                <div class="screen signup-step2">
-                    <div class="wizard-steps">
-                        <div class="step"></div>
-                        <div class="step active"></div>
-                        <div class="step"></div>
-                    </div>
-
-                    <div class="auth-header">
-                        <h1>Votre entreprise</h1>
-                        <p>Étape 2 sur 3 - Informations de l'entreprise</p>
-                    </div>
-
-                    <form id="signup-form-step2" onsubmit="handleSignupStep2(event)">
-                        <div class="form-group">
-                            <label>Nom de l'entreprise</label>
-                            <input type="text" name="company_name" id="company_name" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label>SIRET (optionnel)</label>
-                            <input type="text" name="siret" id="siret">
-                        </div>
-
-                        <div class="form-group">
-                            <label>Numéro TVA (optionnel)</label>
-                            <input type="text" name="vat_number" id="vat_number">
-                        </div>
-
-                        <div class="form-group">
-                            <label>Site web (optionnel)</label>
-                            <input type="url" name="website" id="website">
-                        </div>
-
-                        <div class="form-group">
-                            <label>Secteur d'activité</label>
-                            <select name="industry" id="industry" required>
-                                <option value="">-- Sélectionner --</option>
-                                <option value="Technology">Technologie</option>
-                                <option value="Finance">Finance</option>
-                                <option value="Healthcare">Santé</option>
-                                <option value="Retail">Commerce</option>
-                                <option value="Manufacturing">Fabrication</option>
-                                <option value="Services">Services</option>
-                                <option value="Other">Autre</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Nombre d'employés</label>
-                            <select name="employee_count" id="employee_count">
-                                <option value="">-- Sélectionner --</option>
-                                <option value="1-10">1-10</option>
-                                <option value="11-50">11-50</option>
-                                <option value="51-200">51-200</option>
-                                <option value="201-1000">201-1000</option>
-                                <option value="1000+">1000+</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Chiffre d'affaires annuel (optionnel)</label>
-                            <input type="text" name="annual_revenue" id="annual_revenue">
-                        </div>
-
-                        <div class="nav-buttons">
-                            <button type="button" class="btn btn-secondary" onclick="switchScreen('signup-step1')">Précédent</button>
-                            <button type="submit" class="btn btn-primary">Suivant</button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- SIGNUP STEP 3: Modules -->
-                <div class="screen signup-step3">
-                    <div class="wizard-steps">
-                        <div class="step"></div>
-                        <div class="step"></div>
-                        <div class="step active"></div>
-                    </div>
-
-                    <div class="auth-header">
-                        <h1>Sélectionnez vos modules</h1>
-                        <p>Étape 3 sur 3 - Choisissez les fonctionnalités dont vous avez besoin</p>
-                    </div>
-
-                    <form id="signup-form-step3" onsubmit="handleSignupStep3(event)">
-                        <div class="modules-grid">
-                            <div class="module-item selected" onclick="toggleModule(this, 'crm')">
-                                <input type="checkbox" name="modules" value="crm" checked id="module-crm">
-                                <label for="module-crm">📊 CRM</label>
-                            </div>
-                            <div class="module-item" onclick="toggleModule(this, 'erp')">
-                                <input type="checkbox" name="modules" value="erp" id="module-erp">
-                                <label for="module-erp">⚙️ ERP</label>
-                            </div>
-                            <div class="module-item" onclick="toggleModule(this, 'projects')">
-                                <input type="checkbox" name="modules" value="projects" id="module-projects">
-                                <label for="module-projects">📈 Projets</label>
-                            </div>
-                            <div class="module-item" onclick="toggleModule(this, 'marketing')">
-                                <input type="checkbox" name="modules" value="marketing" id="module-marketing">
-                                <label for="module-marketing">📣 Marketing</label>
-                            </div>
-                            <div class="module-item" onclick="toggleModule(this, 'support')">
-                                <input type="checkbox" name="modules" value="support" id="module-support">
-                                <label for="module-support">💬 Support</label>
-                            </div>
-                            <div class="module-item" onclick="toggleModule(this, 'analytics')">
-                                <input type="checkbox" name="modules" value="analytics" id="module-analytics">
-                                <label for="module-analytics">📉 Analytics</label>
-                            </div>
-                        </div>
-
-                        <div id="signup-step3-message"></div>
-
-                        <div class="nav-buttons">
-                            <button type="button" class="btn btn-secondary" onclick="switchScreen('signup-step2')">Précédent</button>
-                            <button type="submit" class="btn btn-primary" id="btn-finish">Terminer</button>
-                        </div>
-                    </form>
-                </div>
+        <div class="hero-stats">
+            <div class="stat">
+                <div class="stat-value">+</div>
+                <div class="stat-label">Entreprises actives</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">98%</div>
+                <div class="stat-label">Satisfaction client</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">3x</div>
+                <div class="stat-label">Productivité gagnée</div>
             </div>
         </div>
     </div>
 
-    <script>
-        // Screen navigation
-        function switchScreen(screenName) {
-            document.querySelectorAll('.screen').forEach(el => {
-                el.classList.remove('active');
-            });
-            document.querySelector(`.${screenName}`).classList.add('active');
-        }
+    <!-- ══ RIGHT AUTH PANEL ══ -->
+    <div class="auth-panel">
+        <div class="auth-box">
 
-        // Module toggle
-        function toggleModule(element, moduleName) {
-            element.classList.toggle('selected');
-            const checkbox = element.querySelector('input[type="checkbox"]');
-            checkbox.checked = !checkbox.checked;
-        }
+            <!-- ══ WELCOME SCREEN ══ -->
+            <div class="screen welcome active">
+                <div class="screen-header">
+                    <div class="eyebrow">Bienvenue</div>
+                    <h1>Commencer avec Webexa</h1>
+                    <p>Rejoignez des milliers d'entreprises qui font confiance à Webexa</p>
+                </div>
 
-        // Handle login
-        async function handleLogin(e) {
-            e.preventDefault();
-            const formData = new FormData(document.getElementById('login-form'));
-            
-            try {
-                const response = await fetch('crm/api/auth/login.php', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    window.location.href = 'crm/index.php';
-                } else {
-                    showMessage('login-message', data.message || 'Erreur de connexion', 'error');
-                }
-            } catch (error) {
-                showMessage('login-message', 'Erreur: ' + error.message, 'error');
-            }
-        }
+                <div class="action-cards">
+                    <button class="action-card primary-card" onclick="switchScreen('login')">
+                        <div class="action-card-icon">🔑</div>
+                        <div class="action-card-text">
+                            <div class="action-card-title">Se connecter</div>
+                            <div class="action-card-subtitle">Accéder à votre espace Webexa</div>
+                        </div>
+                        <div class="action-card-arrow"><i class="fas fa-arrow-right"></i></div>
+                    </button>
+                    <button class="action-card" onclick="switchScreen('signup-step1')">
+                        <div class="action-card-icon">✨</div>
+                        <div class="action-card-text">
+                            <div class="action-card-title" style="color:var(--dark)">Créer un compte</div>
+                            <div class="action-card-subtitle">Essai gratuit — sans carte bancaire</div>
+                        </div>
+                        <div class="action-card-arrow" style="color:var(--text-secondary)"><i class="fas fa-arrow-right"></i></div>
+                    </button>
+                </div>
 
-        // Handle signup step 1
-        async function handleSignupStep1(e) {
-            e.preventDefault();
-            
-            const password = document.getElementById('signup_password').value;
-            const confirmPassword = document.getElementById('password_confirm').value;
-            
-            if (password !== confirmPassword) {
-                showMessage('signup-message', 'Les mots de passe ne correspondent pas', 'error');
-                return;
-            }
-            
-            if (password.length < 8) {
-                showMessage('signup-message', 'Le mot de passe doit contenir au moins 8 caractères', 'error');
-                return;
-            }
-            
-            const formData = new FormData(document.getElementById('signup-form-step1'));
-            
-            try {
-                const response = await fetch('crm/api/auth/register.php', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    // Store user data for next step
-                    sessionStorage.setItem('signup_data', JSON.stringify({
-                        first_name: formData.get('first_name'),
-                        last_name: formData.get('last_name'),
-                        email: formData.get('email'),
-                        phone: formData.get('phone'),
-                        position: formData.get('position')
-                    }));
-                    
-                    switchScreen('signup-step2');
-                } else {
-                    showMessage('signup-message', data.message || 'Erreur lors de l\'inscription', 'error');
-                }
-            } catch (error) {
-                showMessage('signup-message', 'Erreur: ' + error.message, 'error');
-            }
-        }
+                <div class="divider"><span>ou continuer avec</span></div>
 
-        // Handle signup step 2
-        function handleSignupStep2(e) {
-            e.preventDefault();
-            
-            const companyData = {
-                company_name: document.getElementById('company_name').value,
-                siret: document.getElementById('siret').value,
-                vat_number: document.getElementById('vat_number').value,
-                website: document.getElementById('website').value,
-                industry: document.getElementById('industry').value,
-                employee_count: document.getElementById('employee_count').value,
-                annual_revenue: document.getElementById('annual_revenue').value
-            };
-            
-            // Store company data
-            sessionStorage.setItem('company_data', JSON.stringify(companyData));
-            
-            switchScreen('signup-step3');
-        }
+                <div class="oauth-row">
+                    <button class="oauth-btn" onclick="loginWithGoogle()">
+                        <i class="fab fa-google"></i> Google
+                    </button>
+                    <button class="oauth-btn" onclick="loginWithMicrosoft()">
+                        <i class="fab fa-microsoft"></i> Microsoft
+                    </button>
+                </div>
 
-        // Handle signup step 3 - Final
-        async function handleSignupStep3(e) {
-            e.preventDefault();
-            
-            const signupData = JSON.parse(sessionStorage.getItem('signup_data') || '{}');
-            const companyData = JSON.parse(sessionStorage.getItem('company_data') || '{}');
-            
-            const modules = Array.from(document.querySelectorAll('input[name="modules"]:checked'))
-                .map(el => el.value);
-            
-            if (!modules.includes('crm')) {
-                modules.push('crm'); // CRM always required
-            }
-            
-            const btn = document.getElementById('btn-finish');
-            btn.disabled = true;
-            btn.innerHTML = '<span class="loading"></span>';
-            
-            try {
-                // Call complete setup API
-                const response = await fetch('crm/api/auth/complete-setup.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        profile: signupData,
-                        company: companyData,
-                        modules: modules
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    showMessage('signup-step3-message', 'Inscription réussie! Redirection...', 'success');
-                    setTimeout(() => {
-                        window.location.href = 'crm/index.php';
-                    }, 1500);
-                } else {
-                    showMessage('signup-step3-message', data.message || 'Erreur lors de la configuration', 'error');
-                    btn.disabled = false;
-                    btn.innerHTML = 'Terminer';
-                }
-            } catch (error) {
-                showMessage('signup-step3-message', 'Erreur: ' + error.message, 'error');
-                btn.disabled = false;
-                btn.innerHTML = 'Terminer';
-            }
-        }
+                <div class="auth-footer">
+                    En continuant, vous acceptez nos <a href="#">Conditions d'utilisation</a> et notre <a href="#">Politique de confidentialité</a>
+                </div>
+            </div>
 
-        // Show message
-        function showMessage(elementId, message, type = 'info') {
-            const element = document.getElementById(elementId);
-            element.innerHTML = `<div class="message ${type}">${message}</div>`;
-        }
+            <!-- ══ LOGIN SCREEN ══ -->
+            <div class="screen login">
+                <button class="back-btn" onclick="switchScreen('welcome')">
+                    <i class="fas fa-arrow-left"></i> Retour
+                </button>
+                <div class="screen-header">
+                    <div class="eyebrow">Connexion</div>
+                    <h1>Content de vous revoir</h1>
+                    <p>Connectez-vous à votre espace de travail</p>
+                </div>
 
-        // OAuth handlers
-        function loginWithGoogle() {
-            // Redirect to Google OAuth endpoint in your API
-            window.location.href = 'crm/api/auth/oauth-google.php';
-        }
+                <div class="oauth-row">
+                    <button class="oauth-btn" onclick="loginWithGoogle()">
+                        <i class="fab fa-google"></i> Google
+                    </button>
+                    <button class="oauth-btn" onclick="loginWithMicrosoft()">
+                        <i class="fab fa-microsoft"></i> Microsoft
+                    </button>
+                </div>
 
-        function loginWithMicrosoft() {
-            // Redirect to Microsoft OAuth endpoint in your API
-            window.location.href = 'crm/api/auth/oauth-microsoft.php';
-        }
+                <div class="divider"><span>ou par email</span></div>
 
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            // You can add any initialization code here
-        });
-    </script>
+                <div id="login-message"></div>
+
+                <form id="login-form" onsubmit="handleLogin(event)" novalidate>
+                    <div class="field">
+                        <label for="login_email">Adresse e-mail</label>
+                        <input type="email" id="login_email" name="email" placeholder="vous@entreprise.com" autocomplete="email" required>
+                    </div>
+
+                    <div class="field">
+                        <label for="login_password">Mot de passe</label>
+                        <div class="input-with-icon">
+                            <input type="password" id="login_password" name="password" placeholder="••••••••" autocomplete="current-password" required>
+                            <button type="button" class="toggle-pw" onclick="togglePassword('login_password', this)">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-meta">
+                        <label class="remember-me">
+                            <input type="checkbox" name="remember"> Se souvenir de moi
+                        </label>
+                        <a href="#" class="forgot-link">Mot de passe oublié?</a>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" id="btn-login">
+                        <span>Se connecter</span>
+                    </button>
+                </form>
+
+                <div class="auth-footer">
+                    Pas encore de compte? <a href="#" onclick="switchScreen('signup-step1'); return false;">Créer un compte gratuit</a>
+                </div>
+            </div>
+
+            <!-- ══ SIGNUP STEP 1 ══ -->
+            <div class="screen signup-step1">
+                <button class="back-btn" onclick="switchScreen('welcome')">
+                    <i class="fas fa-arrow-left"></i> Retour
+                </button>
+
+                <div class="steps-bar">
+                    <div class="step-item active">
+                        <div class="step-circle">1</div>
+                        <div class="step-label">Profil</div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-circle">2</div>
+                        <div class="step-label">Entreprise</div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-circle">3</div>
+                        <div class="step-label">Modules</div>
+                    </div>
+                </div>
+
+                <div class="screen-header">
+                    <div class="eyebrow">Étape 1 sur 3</div>
+                    <h1>Vos informations</h1>
+                    <p>Créez votre compte administrateur</p>
+                </div>
+
+                <div id="signup-message"></div>
+
+                <form id="signup-form-step1" onsubmit="handleSignupStep1(event)" novalidate>
+                    <div class="form-row">
+                        <div class="field">
+                            <label for="first_name">Prénom</label>
+                            <input type="text" id="first_name" name="first_name" placeholder="Jean" required autocomplete="given-name">
+                        </div>
+                        <div class="field">
+                            <label for="last_name">Nom</label>
+                            <input type="text" id="last_name" name="last_name" placeholder="Dupont" required autocomplete="family-name">
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label for="signup_email">Adresse e-mail professionnelle</label>
+                        <input type="email" id="signup_email" name="email" placeholder="jean@entreprise.com" required autocomplete="email">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="field">
+                            <label for="signup_password">Mot de passe</label>
+                            <div class="input-with-icon">
+                                <input type="password" id="signup_password" name="password" placeholder="••••••••" required oninput="checkPwStrength(this.value)">
+                                <button type="button" class="toggle-pw" onclick="togglePassword('signup_password', this)">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="pw-strength" id="pw-strength-wrap" style="display:none">
+                                <div class="pw-strength-bar"><div class="pw-strength-fill" id="pw-strength-fill"></div></div>
+                                <div class="pw-strength-label" id="pw-strength-label"></div>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label for="password_confirm">Confirmer</label>
+                            <div class="input-with-icon">
+                                <input type="password" id="password_confirm" name="password_confirm" placeholder="••••••••" required>
+                                <button type="button" class="toggle-pw" onclick="togglePassword('password_confirm', this)">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="field">
+                            <label for="position">Poste</label>
+                            <input type="text" id="position" name="position" placeholder="Directeur commercial">
+                        </div>
+                        <div class="field">
+                            <label for="phone">Téléphone</label>
+                            <input type="tel" id="phone" name="phone" placeholder="+33 6 00 00 00 00">
+                        </div>
+                    </div>
+
+                    <div class="btn-row">
+                        <button type="button" class="btn btn-ghost" onclick="switchScreen('welcome')" style="max-width:120px">Annuler</button>
+                        <button type="submit" class="btn btn-primary" id="btn-step1">Continuer <i class="fas fa-arrow-right"></i></button>
+                    </div>
+                </form>
+
+                <div class="auth-footer">
+                    Déjà un compte? <a href="#" onclick="switchScreen('login'); return false;">Se connecter</a>
+                </div>
+            </div>
+
+            <!-- ══ SIGNUP STEP 2 ══ -->
+            <div class="screen signup-step2">
+                <button class="back-btn" onclick="switchScreen('signup-step1')">
+                    <i class="fas fa-arrow-left"></i> Retour
+                </button>
+
+                <div class="steps-bar">
+                    <div class="step-item done">
+                        <div class="step-circle"><i class="fas fa-check" style="font-size:10px"></i></div>
+                        <div class="step-label">Profil</div>
+                    </div>
+                    <div class="step-item active">
+                        <div class="step-circle">2</div>
+                        <div class="step-label">Entreprise</div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-circle">3</div>
+                        <div class="step-label">Modules</div>
+                    </div>
+                </div>
+
+                <div class="screen-header">
+                    <div class="eyebrow">Étape 2 sur 3</div>
+                    <h1>Votre entreprise</h1>
+                    <p>Configurez votre espace de travail</p>
+                </div>
+
+                <form id="signup-form-step2" onsubmit="handleSignupStep2(event)" novalidate>
+                    <div class="field">
+                        <label for="company_name">Nom de l'entreprise <span style="color:var(--danger)">*</span></label>
+                        <input type="text" id="company_name" name="company_name" placeholder="Acme SAS" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="field">
+                            <label for="siret">SIRET</label>
+                            <input type="text" id="siret" name="siret" placeholder="12345678901234">
+                        </div>
+                        <div class="field">
+                            <label for="vat_number">N° TVA</label>
+                            <input type="text" id="vat_number" name="vat_number" placeholder="FR 12 345678901">
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label for="website">Site web</label>
+                        <input type="url" id="website" name="website" placeholder="https://www.entreprise.com">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="field">
+                            <label for="industry">Secteur d'activité <span style="color:var(--danger)">*</span></label>
+                            <select id="industry" name="industry" required>
+                                <option value="">— Sélectionner —</option>
+                                <option value="Technology">Technologie</option>
+                                <option value="Finance">Finance & Banque</option>
+                                <option value="Healthcare">Santé</option>
+                                <option value="Retail">Commerce & Distribution</option>
+                                <option value="Manufacturing">Industrie & Fabrication</option>
+                                <option value="Services">Services aux entreprises</option>
+                                <option value="Real Estate">Immobilier</option>
+                                <option value="Education">Éducation</option>
+                                <option value="Other">Autre</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="employee_count">Effectif</label>
+                            <select id="employee_count" name="employee_count">
+                                <option value="">— Sélectionner —</option>
+                                <option value="1-10">1 – 10</option>
+                                <option value="11-50">11 – 50</option>
+                                <option value="51-200">51 – 200</option>
+                                <option value="201-1000">201 – 1 000</option>
+                                <option value="1000+">1 000+</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label for="annual_revenue">Chiffre d'affaires annuel</label>
+                        <input type="text" id="annual_revenue" name="annual_revenue" placeholder="ex : 500 000 €">
+                    </div>
+
+                    <div class="btn-row">
+                        <button type="button" class="btn btn-ghost" onclick="switchScreen('signup-step1')" style="max-width:120px">Précédent</button>
+                        <button type="submit" class="btn btn-primary">Continuer <i class="fas fa-arrow-right"></i></button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- ══ SIGNUP STEP 3 ══ -->
+            <div class="screen signup-step3">
+                <button class="back-btn" onclick="switchScreen('signup-step2')">
+                    <i class="fas fa-arrow-left"></i> Retour
+                </button>
+
+                <div class="steps-bar">
+                    <div class="step-item done">
+                        <div class="step-circle"><i class="fas fa-check" style="font-size:10px"></i></div>
+                        <div class="step-label">Profil</div>
+                    </div>
+                    <div class="step-item done">
+                        <div class="step-circle"><i class="fas fa-check" style="font-size:10px"></i></div>
+                        <div class="step-label">Entreprise</div>
+                    </div>
+                    <div class="step-item active">
+                        <div class="step-circle">3</div>
+                        <div class="step-label">Modules</div>
+                    </div>
+                </div>
+
+                <div class="screen-header">
+                    <div class="eyebrow">Étape 3 sur 3</div>
+                    <h1>Choisissez vos modules</h1>
+                    <p>Activez les fonctionnalités adaptées à votre activité</p>
+                </div>
+
+                <div id="signup-step3-message"></div>
+
+                <form id="signup-form-step3" onsubmit="handleSignupStep3(event)">
+                    <div class="modules-grid">
+                        <div class="module-card selected" onclick="toggleModule(this, 'crm')">
+                            <input type="checkbox" name="modules" value="crm" checked id="module-crm">
+                            <div class="check-badge"><i class="fas fa-check"></i></div>
+                            <div class="module-emoji">📊</div>
+                            <div class="module-name">CRM</div>
+                            <div class="module-desc">Leads & opportunités</div>
+                        </div>
+                        <div class="module-card" onclick="toggleModule(this, 'erp')">
+                            <input type="checkbox" name="modules" value="erp" id="module-erp">
+                            <div class="check-badge"><i class="fas fa-check"></i></div>
+                            <div class="module-emoji">⚙️</div>
+                            <div class="module-name">ERP</div>
+                            <div class="module-desc">Gestion opérationnelle</div>
+                        </div>
+                        <div class="module-card" onclick="toggleModule(this, 'projects')">
+                            <input type="checkbox" name="modules" value="projects" id="module-projects">
+                            <div class="check-badge"><i class="fas fa-check"></i></div>
+                            <div class="module-emoji">📁</div>
+                            <div class="module-name">Projets</div>
+                            <div class="module-desc">Suivi & collaboration</div>
+                        </div>
+                        <div class="module-card" onclick="toggleModule(this, 'marketing')">
+                            <input type="checkbox" name="modules" value="marketing" id="module-marketing">
+                            <div class="check-badge"><i class="fas fa-check"></i></div>
+                            <div class="module-emoji">📣</div>
+                            <div class="module-name">Marketing</div>
+                            <div class="module-desc">Campagnes & emails</div>
+                        </div>
+                        <div class="module-card" onclick="toggleModule(this, 'support')">
+                            <input type="checkbox" name="modules" value="support" id="module-support">
+                            <div class="check-badge"><i class="fas fa-check"></i></div>
+                            <div class="module-emoji">💬</div>
+                            <div class="module-name">Support</div>
+                            <div class="module-desc">Tickets & help desk</div>
+                        </div>
+                        <div class="module-card" onclick="toggleModule(this, 'analytics')">
+                            <input type="checkbox" name="modules" value="analytics" id="module-analytics">
+                            <div class="check-badge"><i class="fas fa-check"></i></div>
+                            <div class="module-emoji">📈</div>
+                            <div class="module-name">Analytics</div>
+                            <div class="module-desc">Rapports & tableaux</div>
+                        </div>
+                    </div>
+
+                    <div class="btn-row">
+                        <button type="button" class="btn btn-ghost" onclick="switchScreen('signup-step2')" style="max-width:120px">Précédent</button>
+                        <button type="submit" class="btn btn-primary" id="btn-finish">
+                            Lancer Webexa <i class="fas fa-rocket"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+        </div><!-- /.auth-box -->
+    </div><!-- /.auth-panel -->
+</div><!-- /.page-wrapper -->
+
+<!-- ══ LAST GOOGLE ACCOUNT POPUP ══ -->
+<div id="google-account-popup" class="g-account-popup" role="dialog" aria-label="Connexion rapide" hidden>
+    <div class="g-account-popup-inner">
+        <button class="g-account-close" onclick="dismissGooglePopup()" aria-label="Fermer">
+            <i class="fas fa-times"></i>
+        </button>
+        <div class="g-account-header">
+            <img src="" id="g-account-avatar" class="g-account-avatar" alt="" width="36" height="36">
+            <div class="g-account-info">
+                <div class="g-account-name" id="g-account-name"></div>
+                <div class="g-account-email" id="g-account-email"></div>
+            </div>
+        </div>
+        <div class="g-account-actions">
+            <button class="g-account-btn-primary" id="g-account-continue" onclick="continueWithLastGoogle()">
+                <img src="https://www.google.com/favicon.ico" width="14" height="14" alt=""> Continuer avec ce compte
+            </button>
+            <button class="g-account-btn-ghost" onclick="loginWithGoogle()">
+                Choisir un autre compte
+            </button>
+        </div>
+        <div class="g-account-progress"><div class="g-account-progress-fill" id="g-account-progress-fill"></div></div>
+    </div>
+</div>
+
+<script src="assets/js/auth.js"></script>
+
+<?php if ($lastGoogleAccount): ?>
+<script>
+window._lastGoogleAccount = <?= json_encode([
+    'name'    => $lastGoogleAccount['name'],
+    'email'   => $lastGoogleAccount['email'],
+    'picture' => $lastGoogleAccount['picture'] ?? ''
+]) ?>;
+</script>
+<?php endif; ?>
 </body>
 </html>

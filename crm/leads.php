@@ -145,7 +145,8 @@ $page_title = "Leads - CRM Intelligent";
                                     <th>Nom</th>
                                     <th>Email</th>
                                     <th>Entreprise</th>
-                                    <th>Source</th>
+                                    <th>Tags</th>
+                                    <th class="d-none">Source</th>
                                     <th>Statut</th>
                                     <th>Créé le</th>
                                     <th>Actions</th>
@@ -169,7 +170,8 @@ $page_title = "Leads - CRM Intelligent";
                                             <td class="editable" data-field="name"><?php echo htmlspecialchars(trim(($lead['first_name'] ?? '').' '.($lead['last_name'] ?? ''))); ?></td>
                                             <td class="editable" data-field="email"><?php echo htmlspecialchars($lead['email'] ?? ''); ?></td>
                                             <td class="editable" data-field="company"><?php echo htmlspecialchars($lead['company_name'] ?? ''); ?></td>
-                                            <td class="editable" data-field="source"><?php echo htmlspecialchars($lead['source'] ?? ''); ?></td>
+                                            <td class="editable" data-field="tags"><?php echo htmlspecialchars($lead['tags'] ?? ''); ?></td>
+                                            <td class="editable d-none" data-field="source"><?php echo htmlspecialchars($lead['source'] ?? ''); ?></td>
                                             <td class="readonly">
                                                 <?php
                                                 $status = $lead['stage'] ?? $lead['status'] ?? 'lead';
@@ -180,16 +182,63 @@ $page_title = "Leads - CRM Intelligent";
                                             <td class="readonly"><?php echo htmlspecialchars(isset($lead['created_at']) ? date('d/m/Y', strtotime($lead['created_at'])) : ''); ?></td>
                                             <td class="readonly">
                                                 <?php if (!empty($lead['id'])): ?>
-                                                    <div class="leads-actions-group">
-                                                        <a class="btn btn-sm btn-info leads-btn leads-btn-sm leads-btn-info" href="leads-view.php?id=<?php echo intval($lead['id']); ?>" title="Voir">
-                                                            <i class="fas fa-eye"></i>
-                                                        </a>
-                                                        <a class="btn btn-sm btn-warning leads-btn leads-btn-sm leads-btn-warning" href="leads-edit.php?id=<?php echo intval($lead['id']); ?>" title="Éditer">
-                                                            <i class="fas fa-edit"></i>
-                                                        </a>
-                                                        <button class="btn btn-sm btn-success leads-btn leads-btn-sm leads-btn-success btn-add-company" data-lead-id="<?php echo intval($lead['id']); ?>" title="Ajouter comme client">
-                                                            <i class="fas fa-building"></i>
+                                                    <?php
+                                                        $is_company     = !empty($lead['company_id']);
+                                                        $is_opportunity = in_array($lead['id'], $lead_opportunity_ids ?? []);
+                                                        $lead_full_name = urlencode(trim(($lead['first_name'] ?? '').' '.($lead['last_name'] ?? '')));
+                                                        $lead_phone_enc = urlencode($lead['phone'] ?? '');
+                                                    ?>
+                                                    <div class="dropdown">
+                                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                                                                data-bs-toggle="dropdown" aria-expanded="false">
+                                                            <i class="fas fa-ellipsis-h"></i>
                                                         </button>
+                                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                                            <li>
+                                                                <a class="dropdown-item" href="leads-view.php?id=<?php echo intval($lead['id']); ?>" title="Voir le lead">
+                                                                    <i class="fas fa-eye text-info me-2"></i> Voir
+                                                                </a>
+                                                            </li>
+                                                            <li>
+                                                                <a class="dropdown-item" href="leads-edit.php?id=<?php echo intval($lead['id']); ?>" title="Éditer le lead">
+                                                                    <i class="fas fa-edit text-warning me-2"></i> Éditer
+                                                                </a>
+                                                            </li>
+                                                            <li><hr class="dropdown-divider my-1"></li>
+                                                            <li>
+                                                                <button class="dropdown-item btn-add-opportunity <?php echo $is_opportunity ? 'disabled' : ''; ?>"
+                                                                        data-lead-id="<?php echo intval($lead['id']); ?>"
+                                                                        <?php if ($is_opportunity): ?>disabled<?php endif; ?>
+                                                                        title="<?php echo $is_opportunity ? 'Déjà une opportunité' : 'Ajouter comme opportunité'; ?>">
+                                                                    <i class="fas fa-handshake text-primary me-2"></i>
+                                                                    Opportunité<?php if ($is_opportunity): ?> <i class="fas fa-check text-success ms-1 small"></i><?php endif; ?>
+                                                                </button>
+                                                            </li>
+                                                            <li>
+                                                                <button class="dropdown-item btn-add-company <?php echo $is_company ? 'disabled' : ''; ?>"
+                                                                        data-lead-id="<?php echo intval($lead['id']); ?>"
+                                                                        <?php if ($is_company): ?>disabled<?php endif; ?>
+                                                                        title="<?php echo $is_company ? 'Déjà un client' : 'Ajouter comme client'; ?>">
+                                                                    <i class="fas fa-building text-success me-2"></i>
+                                                                    Client<?php if ($is_company): ?> <i class="fas fa-check text-success ms-1 small"></i><?php endif; ?>
+                                                                </button>
+                                                            </li>
+                                                            <li><hr class="dropdown-divider my-1"></li>
+                                                            <li>
+                                                                <a class="dropdown-item"
+                                                                   href="tasks.php?from_lead=<?php echo intval($lead['id']); ?>&amp;lead_name=<?php echo $lead_full_name; ?>"
+                                                                   title="Créer une tâche pour ce lead">
+                                                                    <i class="fas fa-tasks text-secondary me-2"></i> Tâche
+                                                                </a>
+                                                            </li>
+                                                            <li>
+                                                                <a class="dropdown-item"
+                                                                   href="calls.php?from_lead=<?php echo intval($lead['id']); ?>&amp;lead_name=<?php echo $lead_full_name; ?>&amp;phone=<?php echo $lead_phone_enc; ?>"
+                                                                   title="Planifier un appel pour ce lead">
+                                                                    <i class="fas fa-phone text-success me-2"></i> Appel
+                                                                </a>
+                                                            </li>
+                                                        </ul>
                                                     </div>
                                                 <?php else: ?>
                                                     <span class="text-muted">--</span>
@@ -415,9 +464,42 @@ $page_title = "Leads - CRM Intelligent";
     document.getElementById('filter-source').addEventListener('change', filterLeads);
     document.getElementById('filter-score').addEventListener('change', filterLeads);
 
+    // Ajouter un lead comme Opportunité
+    document.querySelectorAll('.btn-add-opportunity').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            if (this.disabled) return;
+            const leadId = this.getAttribute('data-lead-id');
+            if (!leadId) return;
+            if (!confirm('Créer une opportunité à partir de ce lead ?')) return;
+
+            const formData = new FormData();
+            formData.append('lead_id', leadId);
+
+            try {
+                const response = await fetch('api/lead-to-opportunity.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (result.success || result.already_exists) {
+                    alert(result.success ? '✅ ' + result.message : 'ℹ️ ' + result.message);
+                    this.disabled = true;
+                    this.classList.add('disabled');
+                    this.title = 'Déjà une opportunité';
+                    this.innerHTML = '<i class="fas fa-handshake text-primary me-2"></i> Opportunité <i class="fas fa-check text-success ms-1 small"></i>';
+                } else {
+                    alert('❌ ' + (result.message || 'Erreur'));
+                }
+            } catch (error) {
+                alert('❌ Erreur réseau: ' + error.message);
+            }
+        });
+    });
+
     // Ajouter un lead dans Companies
     document.querySelectorAll('.btn-add-company').forEach(btn => {
         btn.addEventListener('click', async function() {
+            if (this.disabled) return;
             const leadId = this.getAttribute('data-lead-id');
             if (!leadId) return;
             if (!confirm('Créer une company à partir de ce lead ?')) return;
@@ -431,8 +513,12 @@ $page_title = "Leads - CRM Intelligent";
                     body: formData
                 });
                 const result = await response.json();
-                if (result.success) {
-                    alert('✅ ' + result.message);
+                if (result.success || result.already_exists) {
+                    alert(result.success ? '✅ ' + result.message : 'ℹ️ ' + result.message);
+                    this.disabled = true;
+                    this.classList.add('disabled');
+                    this.title = 'Déjà un client';
+                    this.innerHTML = '<i class="fas fa-building text-success me-2"></i> Client <i class="fas fa-check text-success ms-1 small"></i>';
                 } else {
                     alert('❌ ' + (result.message || 'Erreur'));
                 }

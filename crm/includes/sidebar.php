@@ -1,5 +1,12 @@
 
 <!-- CRM Sidebar include (no <html>/<head>/<body>) -->
+<?php
+require_once __DIR__ . '/auth.php';
+requireFeature();
+$crmCan = static function ($feature) {
+    return function_exists('currentUserCan') && currentUserCan($feature);
+};
+?>
 <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
     <!-- Sidebar - Brand -->
     <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.php">
@@ -33,12 +40,12 @@
             </a>
         </li>
         
-        <li class="nav-item">
+        <?php if ($crmCan('ai_actions')): ?><li class="nav-item">
             <a class="nav-link" href="automate.php">
                 <i class="fas fa-fw fa-bolt"></i>
                 <span>Quick Actions</span>
             </a>
-        </li>
+        </li><?php endif; ?>
         
         <li class="nav-item">
             <a class="nav-link" href="notifications.php">
@@ -48,33 +55,41 @@
             </a>
         </li>
         
+        <?php if ($crmCan('analytics')): ?>
         <li class="nav-item">
-            <a class="nav-link" href="integrations.php">
-                <i class="fas fa-fw fa-plug"></i>
-                <span>Intégrations</span>
-            </a>
-        </li>
-        
-        <li class="nav-item">
-            <a class="nav-link" href="analytics.php">
+            <a class="nav-link" href="analytics-sales.php">
                 <i class="fas fa-fw fa-chart-line"></i>
                 <span>Analytics</span>
             </a>
         </li>
-        
+        <?php endif; ?>
+
+        <?php if ($crmCan('whatsapp')): ?>
         <li class="nav-item">
             <a class="nav-link" href="whatsapp-settings.php">
                 <i class="fab fa-fw fa-whatsapp"></i>
                 <span>WhatsApp</span>
             </a>
         </li>
-        
+        <?php endif; ?>
+
+        <?php if ($crmCan('email')): ?>
         <li class="nav-item">
-            <a class="nav-link" href="emails.php">
+            <a class="nav-link" href="email-inbox.php">
                 <i class="fas fa-fw fa-envelope"></i>
                 <span>Emails</span>
             </a>
         </li>
+        <?php endif; ?>
+
+        <?php if ($crmCan('ai_agents')): ?>
+        <li class="nav-item">
+            <a class="nav-link" href="ai-dashboard.php">
+                <i class="fas fa-fw fa-robot"></i>
+                <span>Agents IA</span>
+            </a>
+        </li>
+        <?php endif; ?>
         
         <li class="nav-item">
             <a class="nav-link" href="ai-dashboard.php">
@@ -115,6 +130,7 @@
         </a>
     </li>
 
+    <?php if ($crmCan('pipeline')): ?>
     <!-- Nav Item - Pipeline -->
      <li class="nav-item">
          <a class="nav-link" href="pipeline-board.php">
@@ -122,7 +138,9 @@
              <span>Pipeline (Kanban)</span>
          </a>
      </li>
+    <?php endif; ?>
 
+    <?php if ($crmCan('tasks')): ?>
      <!-- Nav Item - Tasks -->
     <li class="nav-item">
         <a class="nav-link" href="tasks.php">
@@ -130,7 +148,9 @@
             <span>Tâches</span>
         </a>
     </li>
+    <?php endif; ?>
 
+    <?php if ($crmCan('calls')): ?>
     <!-- Nav Item - Calls -->
      <li class="nav-item">
          <a class="nav-link" href="calls.php">
@@ -138,6 +158,7 @@
              <span>Appels</span>
          </a>   
     </li>   
+    <?php endif; ?>
 
     <!-- Divider -->
     <hr class="sidebar-divider">
@@ -147,6 +168,7 @@
 
 
   
+    <?php if ($crmCan('leads')): ?>
     <!-- Nav Item - Leads -->
     <li class="nav-item">
         <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseLeads">
@@ -163,7 +185,9 @@
             </div>
         </div>
     </li>
+    <?php endif; ?>
 
+    <?php if ($crmCan('folders')): ?>
     <!-- Nav Item - Folders-->
     <li class="nav-item">
         <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseFolders">
@@ -178,7 +202,9 @@
             </div>
         </div>
     </li>
+    <?php endif; ?>
 
+    <?php if ($crmCan('missions')): ?>
     <!-- Nav Item - Missions-->
     <li class="nav-item">
         <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseMissions">
@@ -193,7 +219,9 @@
             </div>
         </div>
     </li>
+    <?php endif; ?>
 
+    <?php if ($crmCan('pipeline')): ?>
     <!-- Nav Item - Opportunities -->
     <li class="nav-item">
         <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseOpportunities">
@@ -209,7 +237,9 @@
             </div>
         </div>
     </li>
+    <?php endif; ?>
 
+    <?php if ($crmCan('clients')): ?>
     <!-- Nav Item - Customers -->
     <li class="nav-item">
         <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseCustomers">
@@ -224,6 +254,7 @@
             </div>
         </div>
     </li>
+    <?php endif; ?>
 
     <!-- Divider -->
     <hr class="sidebar-divider">
@@ -231,6 +262,7 @@
     <!-- Heading -->
     <div class="sidebar-heading">Analytics & BI</div>
 
+    <?php if ($crmCan('analytics')): ?>
     <!-- Nav Item - Power BI -->
     <li class="nav-item">
         <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapsePowerBI">
@@ -247,7 +279,9 @@
             </div>
         </div>
     </li>
+    <?php endif; ?>
 
+    <?php if ($crmCan('analytics')): ?>
     <!-- Nav Item - Analytics -->
     <li class="nav-item">
         <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseAnalytics">
@@ -263,7 +297,9 @@
             </div>
         </div>
     </li>
+    <?php endif; ?>
 
+    <?php if ($crmCan('ai_agents')): ?>
     <!-- Nav Item - AI Insights -->
     <li class="nav-item">
         <a class="nav-link" href="ai-insights.php">
@@ -271,17 +307,20 @@
             <span>Insights IA</span>
         </a>
     </li>
+    <?php endif; ?>
 
     <!-- Divider -->
     <hr class="sidebar-divider">
     <div class="sidebar-heading">IA Webitech</div>
-        <!-- Nav Item - AI Dashboard -->
+        <?php if ($crmCan('ai_agents')): ?>
+            <!-- Nav Item - AI Dashboard -->
     <li class="nav-item">
         <a class="nav-link" href="ai-dashboard.php">
             <i class="fas fa-fw fa-robot"></i>
             <span>Agent IA</span>
         </a>
     </li>
+    <?php endif; ?>
     
     <!-- Nav Item - Notifications -->
     <!-- <li class="nav-item">
@@ -300,6 +339,7 @@
     <!-- Heading -->
     <div class="sidebar-heading">Marketing</div>
 
+    <?php if ($crmCan('campaigns')): ?>
     <!-- Nav Item - Campaigns -->
     <li class="nav-item">
         <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseCampaigns">
@@ -317,7 +357,9 @@
             </div>
         </div>
     </li>
+    <?php endif; ?>
 
+    <?php if ($crmCan('email')): ?>
     <!-- Nav Item - Email -->
     <li class="nav-item">
         <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseEmail">
@@ -339,7 +381,9 @@
             </div>
         </div>
     </li>
+    <?php endif; ?>
 
+    <?php if ($crmCan('whatsapp')): ?>
     <!-- Nav Item - WhatsApp -->
     <li class="nav-item">
         <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseWhatsApp">
@@ -363,6 +407,7 @@
             </div>
         </div>
     </li>
+    <?php endif; ?>
 
        <!-- Divider -->
     <hr class="sidebar-divider">

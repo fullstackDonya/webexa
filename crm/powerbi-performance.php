@@ -15,12 +15,17 @@ $page_title = "Performance Power BI";
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title><?php echo $page_title; ?> - CRM Intelligent</title>
-    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="assets/css/style.css" rel="stylesheet">
 
 </head>
 
-<body id="page-top">
+<body>
+    
     <div class="wrapper">
+         <?php include 'includes/topbar.php'; ?>
+
         <?php include 'includes/sidebar.php'; ?>
         
         <div class="main-content">

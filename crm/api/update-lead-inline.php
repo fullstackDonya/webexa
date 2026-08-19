@@ -5,6 +5,7 @@
  */
 
 header('Content-Type: application/json');
+require_once __DIR__ . '/permission-bootstrap.php';
 require_once __DIR__ . '/../includes/config.php';
 
 // Vérifier que c'est une requête POST
@@ -93,6 +94,18 @@ try {
     
     // Vérifier si la mise à jour a réussi
     if ($stmt->rowCount() > 0) {
+        // Synchroniser l'opportunité liée (connexion base principale)
+        try {
+            require_once __DIR__ . '/../config/database.php';
+            if ($field === 'name') {
+                $pdo->prepare("UPDATE opportunities SET title = ?, updated_at = NOW() WHERE lead_id = ?")
+                    ->execute([trim($value), $lead_id]);
+            } elseif ($field === 'source') {
+                $pdo->prepare("UPDATE opportunities SET source = ?, updated_at = NOW() WHERE lead_id = ?")
+                    ->execute([$value !== '' ? $value : null, $lead_id]);
+            }
+        } catch (Throwable $ignore) {}
+
         echo json_encode([
             'success' => true, 
             'message' => 'Lead mis à jour avec succès',

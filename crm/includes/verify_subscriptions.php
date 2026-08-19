@@ -2,6 +2,7 @@
 require_once 'config/database.php';
 require_once 'includes/auth.php';
 
+
 if (!isset($user)) {
     // Si $user n'est pas encore défini, on le récupère
     if (function_exists('getCurrentUser')) {
@@ -11,6 +12,11 @@ if (!isset($user)) {
         header('Location: ../login.php');
         exit;
     }
+}
+
+// Le menu ne suffit pas : chaque page protegée verifie aussi sa fonctionnalite.
+if (function_exists('requireFeature')) {
+    requireFeature();
 }
 
 if (!isset($pdo)) {

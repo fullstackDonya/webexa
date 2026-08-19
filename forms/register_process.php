@@ -1,9 +1,12 @@
 <?php
 // Activer l'affichage des erreurs pour debug
-error_reporting(E_ALL);
 ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 
 require '../crm/config/database.php';
+require '../config/mailer.php';
 
 // Détecter si c'est une requête AJAX
 $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
@@ -66,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 foreach ($errors as $error) {
                     echo "<li>" . htmlspecialchars($error) . "</li>";
                 }
-                echo "</ul><a href='../register.php'>Retour</a>";
+                echo "</ul><a href='../register'>Retour</a>";
             }
             exit;
         }
@@ -86,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'message' => $message
                 ]);
             } else {
-                echo "<h3>Erreur</h3><p>" . htmlspecialchars($message) . "</p><a href='../register.php'>Retour</a>";
+                echo "<h3>Erreur</h3><p>" . htmlspecialchars($message) . "</p><a href='../register'>Retour</a>";
             }
             exit;
         }
@@ -105,7 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'message' => $message
                     ]);
                 } else {
-                    echo "<h3>Erreur</h3><p>" . htmlspecialchars($message) . "</p><a href='../register.php'>Retour</a>";
+                    echo "<h3>Erreur</h3><p>" . htmlspecialchars($message) . "</p><a href='../register'>Retour</a>";
                 }
                 exit;
             }
@@ -158,17 +161,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Envoi de l'email de vérification
         $verify_link = "https://" . $_SERVER['HTTP_HOST'] . "/forms/verify_email.php?token=$verify_token";
           
-        $subject = "Vérification de votre adresse email";
-        $message = "Bonjour $username,<br><br>
-        Merci pour votre inscription.<br>
-        Veuillez cliquer sur le lien suivant pour vérifier votre adresse email :<br>
-        <a href='$verify_link'>$verify_link</a><br><br>
-        Si vous n'êtes pas à l'origine de cette inscription, ignorez ce message.";
-        $headers = "MIME-Version: 1.0\r\n";
-        $headers .= "Content-type:text/html;charset=UTF-8\r\n";
-        $headers .= "From: noreply@" . $_SERVER['HTTP_HOST'] . "\r\n";
+        $subject = "Vérification de votre adresse email - Webexa By WebItech";
+        $messageBody = "
+            <h2>Bienvenue sur Webexa By WebItech !</h2>
+            <p>Bonjour <strong>" . htmlspecialchars($username) . "</strong>,</p>
+            <p>Merci pour votre inscription sur Webexa By WebItech.</p>
+            <p>Pour activer votre compte, veuillez cliquer sur le lien ci-dessous pour vérifier votre adresse email :</p>
+            <p><a href='$verify_link' style='display:inline-block;padding:12px 24px;background:#007bff;color:white;text-decoration:none;border-radius:5px;'>Vérifier mon email</a></p>
+            <p>Ou copiez ce lien dans votre navigateur :<br>
+            <code>$verify_link</code></p>
+            <p>Si vous n'êtes pas à l'origine de cette inscription, ignorez simplement ce message.</p>
+            <p>Cordialement,<br>L'équipe Webexa</p>
+        ";
 
-        mail($email, $subject, $message, $headers);
+        // Utiliser la fonction sendEmail améliorée
+        $emailSent = sendEmail($email, $subject, $messageBody);
+        
+        if (!$emailSent) {
+            error_log('[REGISTER] Email de vérification non envoyé pour user_id: ' . $user_id);
+        }
 
         file_put_contents('register_debug.log', "Inscription réussie pour user_id: $user_id\n", FILE_APPEND);
 
@@ -178,11 +189,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo json_encode([
                 'success' => true,
                 'message' => $successMessage,
-                'redirect' => 'login.php'
+                'redirect' => 'login'
             ]);
         } else {
             echo "<h3>Succès !</h3><p>" . htmlspecialchars($successMessage) . "</p>";
-            echo "<p><a href='../login.php'>Se connecter maintenant</a></p>";
+            echo "<p><a href='../login'>Se connecter maintenant</a></p>";
         }
 
     } catch (Exception $e) {
@@ -201,7 +212,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'message' => $errorMessage
             ]);
         } else {
-            echo "<h3>Erreur</h3><p>" . htmlspecialchars($errorMessage) . "</p><a href='../register.php'>Retour</a>";
+            echo "<h3>Erreur</h3><p>" . htmlspecialchars($errorMessage) . "</p><a href='../register'>Retour</a>";
         }
     }
 } else {
@@ -215,7 +226,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'message' => $message
         ]);
     } else {
-        echo "<h3>Erreur</h3><p>" . htmlspecialchars($message) . "</p><a href='../register.php'>Retour</a>";
+        echo "<h3>Erreur</h3><p>" . htmlspecialchars($message) . "</p><a href='../register'>Retour</a>";
     }
 }
 ?>

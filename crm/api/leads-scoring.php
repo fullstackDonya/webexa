@@ -3,6 +3,7 @@ header('Content-Type: application/json; charset=utf-8');
 session_start();
 
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/permission-bootstrap.php';
 
 $response = [
     'success' => false,

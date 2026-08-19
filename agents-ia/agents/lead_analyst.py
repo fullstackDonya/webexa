@@ -27,6 +27,9 @@ class LeadAnalystAgent:
             
             # 2. Analyser avec l'IA
             score_result = llm.score_lead(lead)
+            #print("DEBUG SCORE RESULT:", score_result)
+            
+          
             
             # 3. Mettre à jour le score dans la base
             self._update_lead_score(lead_id, score_result)
@@ -151,16 +154,31 @@ class LeadAnalystAgent:
             lead["has_budget"] = True
         else:
             # Extraire le budget des notes si mentionné
-            notes = lead.get("notes", "") or lead.get("interest", "")
+            notes = (
+                lead.get("notes")
+                or lead.get("interest")
+                or ""
+            )
+
+            notes = str(notes)
+
             if "budget" in notes.lower() or "€" in notes or "euro" in notes.lower():
                 lead["has_budget"] = True
             else:
                 lead["has_budget"] = False
         
         # Déterminer l'urgence depuis les notes
-        notes_text = (lead.get("notes", "") or "") + " " + (lead.get("interest", "") or "")
-        lead["urgence"] = "urgent" in notes_text.lower() or "rapidement" in notes_text.lower()
-        
+        notes_text = (
+            str(lead.get("notes") or "")
+            + " "
+            + str(lead.get("interest") or "")
+        )
+
+        lead["urgence"] = (
+            "urgent" in notes_text.lower()
+            or "rapidement" in notes_text.lower()
+        )
+                
         return lead
     
     def _update_lead_score(self, lead_id: int, score_result: Dict):

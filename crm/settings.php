@@ -1,4 +1,7 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 session_start();
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/includes/auth.php';
@@ -38,7 +41,7 @@ $userInfo = $stmt->fetch(PDO::FETCH_ASSOC);
 // Récupérer la company si elle existe
 $companyInfo = null;
 if ($customer_id) {
-    $stmt = $pdo->prepare("SELECT * FROM companies WHERE customer_id = ? LIMIT 1");
+    $stmt = $pdo->prepare("SELECT * FROM companies WHERE customer_id = ? AND interne_customer = 1 LIMIT 1");
     $stmt->execute([$customer_id]);
     $companyInfo = $stmt->fetch(PDO::FETCH_ASSOC);
 }

@@ -5,6 +5,7 @@
 header('Content-Type: application/json');
 session_start();
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/permission-bootstrap.php';
 
 // Vérifier l'authentification
 if (!isset($_SESSION['customer_id'])) {
@@ -60,11 +61,11 @@ try {
         
         $stmt = $pdo->prepare("
             INSERT INTO tasks (
-                customer_id, title, description, due_date, 
-                priority, status, type, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
+                customer_id, title, description, due_date,
+                priority, status, type, related_type, related_id, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
         ");
-        
+
         $stmt->execute([
             $customer_id,
             $title,
@@ -72,7 +73,9 @@ try {
             $jsonData['due_date'] ?? null,
             $jsonData['priority'] ?? 'medium',
             $jsonData['status'] ?? 'todo',
-            $jsonData['type'] ?? 'general'
+            $jsonData['type'] ?? 'general',
+            !empty($jsonData['related_type']) ? $jsonData['related_type'] : null,
+            !empty($jsonData['related_id'])   ? intval($jsonData['related_id']) : null,
         ]);
         
         $taskId = $pdo->lastInsertId();
@@ -105,24 +108,28 @@ try {
         }
         
         $stmt = $pdo->prepare("
-            UPDATE tasks SET 
-                title = ?,
-                description = ?,
-                due_date = ?,
-                priority = ?,
-                status = ?,
-                updated_at = NOW()
+            UPDATE tasks SET
+                title        = ?,
+                description  = ?,
+                due_date     = ?,
+                priority     = ?,
+                status       = ?,
+                related_type = ?,
+                related_id   = ?,
+                updated_at   = NOW()
             WHERE id = ? AND customer_id = ?
         ");
-        
+
         $stmt->execute([
             $jsonData['title'] ?? '',
             $jsonData['description'] ?? null,
             $jsonData['due_date'] ?? null,
             $jsonData['priority'] ?? 'medium',
             $jsonData['status'] ?? 'todo',
+            !empty($jsonData['related_type']) ? $jsonData['related_type'] : null,
+            !empty($jsonData['related_id'])   ? intval($jsonData['related_id']) : null,
             $taskId,
-            $customer_id
+            $customer_id,
         ]);
         
         // Si marquée comme terminée, enregistrer la date

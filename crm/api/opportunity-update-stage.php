@@ -7,6 +7,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/permission-bootstrap.php';
 require_once __DIR__ . '/../includes/pipeline_utils.php';
 
 $user_id = $_SESSION['user_id'] ?? null;

@@ -244,7 +244,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         // Déterminer l'URL de redirection
-        $redirectUrl = $_SESSION['redirect_after_login'] ?? 'index.php';
+        $redirectUrl = $_SESSION['redirect_after_login'] ?? 'crm/index.php';
         unset($_SESSION['redirect_after_login']);
         
         if ($isAjax) {

@@ -5,6 +5,7 @@
 header('Content-Type: application/json');
 session_start();
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/permission-bootstrap.php';
 
 // Vérifier l'authentification
 if (!isset($_SESSION['customer_id'])) {
@@ -69,6 +70,14 @@ try {
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
         ");
         
+        $stmt = $pdo->prepare("
+            INSERT INTO call_reminders (
+                customer_id, contact_name, phone, scheduled_time,
+                duration_minutes, notes, call_type, status,
+                contact_type, contact_id, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+        ");
+
         $stmt->execute([
             $customer_id,
             $contact_name,
@@ -78,7 +87,8 @@ try {
             $jsonData['notes'] ?? null,
             $jsonData['call_type'] ?? 'follow_up',
             $jsonData['status'] ?? 'pending',
-            $jsonData['contact_type'] ?? 'other'
+            !empty($jsonData['contact_type']) ? $jsonData['contact_type'] : 'other',
+            !empty($jsonData['contact_id'])   ? intval($jsonData['contact_id']) : null,
         ]);
         
         $callId = $pdo->lastInsertId();
@@ -111,18 +121,20 @@ try {
         }
         
         $stmt = $pdo->prepare("
-            UPDATE call_reminders SET 
-                contact_name = ?,
-                phone = ?,
-                scheduled_time = ?,
+            UPDATE call_reminders SET
+                contact_name     = ?,
+                phone            = ?,
+                scheduled_time   = ?,
                 duration_minutes = ?,
-                notes = ?,
-                call_type = ?,
-                status = ?,
-                updated_at = NOW()
+                notes            = ?,
+                call_type        = ?,
+                status           = ?,
+                contact_type     = ?,
+                contact_id       = ?,
+                updated_at       = NOW()
             WHERE id = ? AND customer_id = ?
         ");
-        
+
         $stmt->execute([
             $jsonData['contact_name'] ?? '',
             $jsonData['phone'] ?? '',
@@ -131,8 +143,10 @@ try {
             $jsonData['notes'] ?? null,
             $jsonData['call_type'] ?? 'follow_up',
             $jsonData['status'] ?? 'pending',
+            !empty($jsonData['contact_type']) ? $jsonData['contact_type'] : 'other',
+            !empty($jsonData['contact_id'])   ? intval($jsonData['contact_id']) : null,
             $callId,
-            $customer_id
+            $customer_id,
         ]);
         
         // Si marqué comme terminé, enregistrer la date

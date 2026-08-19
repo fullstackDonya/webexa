@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../../crm/config/database.php';
 include_once __DIR__ . '/../../crm/includes/auth.php';
+requireFeature('planning');
 
 $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
 $customer_id = $_SESSION['customer_id'] ?? null;
@@ -137,6 +138,67 @@ if ($action === 'fetch' && $_SERVER['REQUEST_METHOD'] === 'GET') {
     
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode(['shifts' => $shifts, 'missions' => $missionsInRange]);
+    exit;
+}
+if ($action === 'stats' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+    $start = $_GET['start'] ?? null;
+    $end = $_GET['end'] ?? null;
+    if (!$start || !$end || !$customer_id) {
+        http_response_code(400);
+        echo json_encode(['error' => 'start, end and customer_id required']);
+        exit;
+    }
+
+    $monthStart = date('Y-m-01');
+    $monthEnd = date('Y-m-t');
+    $params = [$customer_id, $start . ' 00:00:00', $end . ' 23:59:59'];
+    $monthParams = [$customer_id, $monthStart . ' 00:00:00', $monthEnd . ' 23:59:59'];
+
+    $shiftSql = "SELECT DATE(start_datetime) AS day, COUNT(*) AS total
+                 FROM erp_shifts
+                 WHERE customer_id = ? AND start_datetime BETWEEN ? AND ?
+                 GROUP BY DATE(start_datetime)";
+    $stmt = $pdo->prepare($shiftSql);
+    $stmt->execute($params);
+    $shiftDays = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+
+    $missionSql = "SELECT DATE(m.datetime) AS day, COUNT(*) AS total
+                   FROM missions m
+                   INNER JOIN folders f ON f.id = m.folder_id
+                   INNER JOIN companies c ON c.id = f.company_id
+                   WHERE c.customer_id = ? AND c.interne_customer = false
+                     AND m.datetime BETWEEN ? AND ?
+                   GROUP BY DATE(m.datetime)";
+    $stmt = $pdo->prepare($missionSql);
+    $stmt->execute($params);
+    $missionDays = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM erp_shifts WHERE customer_id = ? AND start_datetime BETWEEN ? AND ?");
+    $stmt->execute($monthParams);
+    $monthShifts = (int)$stmt->fetchColumn();
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM missions m
+        INNER JOIN folders f ON f.id = m.folder_id
+        INNER JOIN companies c ON c.id = f.company_id
+        WHERE c.customer_id = ? AND c.interne_customer = false AND m.datetime BETWEEN ? AND ?");
+    $stmt->execute($monthParams);
+    $monthMissions = (int)$stmt->fetchColumn();
+
+    $weekDays = [];
+    foreach (array_unique(array_merge(array_keys($shiftDays), array_keys($missionDays))) as $day) {
+        $weekDays[$day] = [
+            'shifts' => (int)($shiftDays[$day] ?? 0),
+            'missions' => (int)($missionDays[$day] ?? 0),
+        ];
+    }
+
+    echo json_encode([
+        'week' => [
+            'shifts' => array_sum(array_map('intval', $shiftDays)),
+            'missions' => array_sum(array_map('intval', $missionDays)),
+            'days' => $weekDays
+        ],
+        'month' => ['shifts' => $monthShifts, 'missions' => $monthMissions]
+    ]);
     exit;
 }
 if ($action === 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {

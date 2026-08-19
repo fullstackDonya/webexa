@@ -30,6 +30,14 @@ $client->setRedirectUri($redirectUri);
 $client->addScope('email');
 $client->addScope('profile');
 
+// Toujours afficher le sélecteur de compte
+$client->setPrompt('select_account');
+
+// Pré-sélectionner un compte spécifique (hint depuis le popup)
+if (!empty($_GET['hint'])) {
+    $client->setLoginHint(filter_var($_GET['hint'], FILTER_SANITIZE_EMAIL));
+}
+
 // Si retour de Google avec code
 if (isset($_GET['code'])) {
     $token = $client->fetchAccessTokenWithAuthCode($_GET['code']);
@@ -44,7 +52,7 @@ if (isset($_GET['code'])) {
         $google_id = $google_user->id;
 
         // Connexion à la BDD
-        require_once __DIR__ . '/config/database.php';
+        require_once __DIR__ . '/crm/config/database.php';
 
         // Vérifie si l'utilisateur existe déjà
           
@@ -70,21 +78,63 @@ if (isset($_GET['code'])) {
             $username = preg_replace('/\s+/', '_', strtolower($name)); // exemple: "John Doe" => "john_doe"
             $password = password_hash(bin2hex(random_bytes(8)), PASSWORD_DEFAULT);
         
+            // Sépare le nom Google en prénom et nom
+            $nameParts = explode(' ', $name, 2);
+
+            $first_name = $nameParts[0];
+            $last_name = $nameParts[1] ?? '';
+
             $stmt = $pdo->prepare("
-                INSERT INTO users (name, username, email, password, google_id, created_at)
-                VALUES (?, ?, ?, ?, ?, NOW())
+                INSERT INTO users 
+                (
+                    username,
+                    email,
+                    google_id,
+                    password,
+                    first_name,
+                    last_name,
+                    role,
+                    avatar,
+                    email_verified,
+                    created_at,
+                    updated_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
             ");
-            $stmt->execute([$name, $username, $email, $password, $google_id]);
-        
+
+            $stmt->execute([
+                $username,
+                $email,
+                $google_id,
+                $password,
+                $first_name,
+                $last_name,
+                'sales',
+                $google_user->picture,
+                1
+            ]);
             // Récupère l'ID de l'utilisateur créé
             $_SESSION['user_id'] = $pdo->lastInsertId();
             $_SESSION['username'] = $username;
             $_SESSION['email'] = $email;
-            $_SESSION['user_role'] = 'ROLE_USER'; // ou la valeur par défaut
+            $_SESSION['user_role'] = 'sales'; // ou la valeur par défaut
             $_SESSION['login_time'] = time();
         }
+        // Sauvegarder le dernier compte Google (données d'affichage uniquement)
+        $accountCookie = json_encode([
+            'name'    => htmlspecialchars($name, ENT_QUOTES, 'UTF-8'),
+            'email'   => $email,
+            'picture' => $google_user->picture ?? ''
+        ]);
+        setcookie('last_google_account', $accountCookie, [
+            'expires'  => time() + 365 * 24 * 3600,
+            'path'     => '/',
+            'httponly' => false,
+            'samesite' => 'Lax'
+        ]);
+
         // Redirection vers la page d'accueil ou dashboard
-        header('Location: account');
+        header('Location: crm/index.php');
         exit;
     } else {
         // Erreur Google

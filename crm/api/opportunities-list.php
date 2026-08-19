@@ -3,6 +3,7 @@
 header('Content-Type: application/json');
 session_start();
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/permission-bootstrap.php';
 
 $user_id = $_SESSION['user_id'] ?? null;
 if (!$user_id) {

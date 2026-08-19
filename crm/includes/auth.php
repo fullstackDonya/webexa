@@ -18,14 +18,21 @@ if (!function_exists('isAuthenticated')) {
 if (!function_exists('getCurrentUser')) {
     function getCurrentUser() {
         global $pdo;
+        static $currentUser = null;
+        static $loaded = false;
         
         if (!isAuthenticated()) {
             return null;
         }
+        if ($loaded) {
+            return $currentUser;
+        }
         
         $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
         $stmt->execute([$_SESSION['user_id']]);
-        return $stmt->fetch();
+        $currentUser = $stmt->fetch() ?: null;
+        $loaded = true;
+        return $currentUser;
     }
 }
 
@@ -105,6 +112,108 @@ if (!function_exists('register')) {
 if (!function_exists('hasRole')) {
     function hasRole($role) {
         return isset($_SESSION['user_role']) && $_SESSION['user_role'] === $role;
+    }
+}
+
+if (!function_exists('featurePermissions')) {
+    function featurePermissions() {
+        return [
+            'analytics' => 'can_access_analytics',
+            'pipeline' => 'can_access_pipeline',
+            'tasks' => 'can_access_tasks',
+            'calls' => 'can_access_calls',
+            'clients' => 'can_access_clients',
+            'leads' => 'can_access_leads',
+            'folders' => 'can_access_folders',
+            'missions' => 'can_access_missions',
+            'billing' => 'can_access_billing',
+            'mail' => 'can_access_mail',
+            'ai_agents' => 'can_access_ai_agents',
+            'ai_actions' => 'can_access_ai_actions',
+            'campaigns' => 'can_access_campaigns',
+            'whatsapp' => 'can_access_whatsapp',
+            'email' => 'can_access_email',
+            'invoices' => 'can_access_invoices',
+            'quotes' => 'can_access_quotes',
+            'sales' => 'can_access_sales',
+            'planning' => 'can_access_planning',
+            'hr' => 'can_access_hr',
+            'payroll' => 'can_access_payroll',
+            'generate_payroll' => 'can_generate_payroll',
+        ];
+    }
+}
+
+if (!function_exists('currentUserCan')) {
+    function currentUserCan($feature) {
+        $user = getCurrentUser();
+        if (!$user) return false;
+        if (($user['role'] ?? '') === 'admin') return true;
+
+        $field = featurePermissions()[$feature] ?? $feature;
+        if (!preg_match('/^can_(access|generate)_[a-z0-9_]+$/', $field)) return false;
+        return !array_key_exists($field, $user) || (bool)$user[$field];
+    }
+}
+
+if (!function_exists('permissionForPath')) {
+    function permissionForPath($path = null) {
+        $path = strtolower(str_replace('\\', '/', $path ?: ($_SERVER['SCRIPT_NAME'] ?? '')));
+        $path = preg_replace('#^.*/crm/#', '', $path);
+        $routes = [
+            'analytics' => ['analytics-', 'powerbi-'],
+            'pipeline' => ['pipeline-'],
+            'tasks' => ['tasks.php', 'api/tasks.php'],
+            'calls' => ['calls.php', 'api/calls.php'],
+            'clients' => ['customers', 'customer'],
+            'leads' => ['leads', 'lead-'],
+            'folders' => ['folders', 'folder-'],
+            'missions' => ['missions', 'mission-', 'api/missions'],
+            'campaigns' => ['campaign'],
+            'whatsapp' => ['whatsapp'],
+            'email' => ['email-', 'email.'],
+            'invoices' => ['invoice'],
+            'quotes' => ['quote'],
+            'sales' => ['sales'],
+            'planning' => ['shifts.php'],
+            'hr' => ['employees.php', 'employee-', 'hr-'],
+            'payroll' => ['payroll'],
+            'ai_agents' => ['ai-dashboard', 'ai-logs', 'ai-insights', 'api/ai-', 'api/ai.'],
+            'ai_actions' => ['ai-recalculate', 'api/ai-agents'],
+        ];
+        foreach ($routes as $feature => $patterns) {
+            foreach ($patterns as $pattern) {
+                if (strpos($path, $pattern) !== false) return $feature;
+            }
+        }
+        return null;
+    }
+}
+
+if (!function_exists('requireFeature')) {
+    function requireFeature($feature = null, $api = false) {
+        if (!isAuthenticated()) {
+            if ($api) {
+                http_response_code(401);
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['success' => false, 'message' => 'Non authentifié']);
+                exit;
+            }
+            header('Location: ../login.php');
+            exit;
+        }
+        $feature = $feature ?: permissionForPath();
+        if ($feature && !currentUserCan($feature)) {
+            if ($api) {
+                http_response_code(403);
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['success' => false, 'message' => 'Accès interdit']);
+                exit;
+            }
+            http_response_code(403);
+            echo 'Accès interdit';
+            exit;
+        }
     }
 }
 

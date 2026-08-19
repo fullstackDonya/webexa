@@ -43,16 +43,18 @@ $page_title = "Analyse des Ventes - CRM Intelligent";
                             <div class="card-body">
                                 <div class="row no-gutters align-items-center">
                                     <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                        <div id="kpi-total-label" class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                                             Ventes ce mois
                                         </div>
-                                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="monthly-sales">€245,780</div>
-                                        <div class="text-xs text-success">
-                                            <i class="fas fa-arrow-up"></i> +15.2% vs mois dernier
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="monthly-sales">
+                                            Chargement...
+                                        </div>
+                                        <div class="text-xs text-success" id="sales-growth">
+                                            <i class="fas fa-arrow-up"></i>
                                         </div>
                                     </div>
                                     <div class="col-auto">
-                                        <i class="fas fa-euro-sign fa-2x text-gray-300"></i>
+                                         <i class="fas fa-euro-sign fa-2x text-gray-300"></i>
                                     </div>
                                 </div>
                             </div>
@@ -64,12 +66,12 @@ $page_title = "Analyse des Ventes - CRM Intelligent";
                             <div class="card-body">
                                 <div class="row no-gutters align-items-center">
                                     <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                            Nombre de ventes
+                                       <div id="kpi-count-label" class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                            Nombre
                                         </div>
-                                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="sales-count">187</div>
-                                        <div class="text-xs text-success">
-                                            <i class="fas fa-arrow-up"></i> +8% vs mois dernier
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="sales-count">Chargement...</div>
+                                        <div class="text-xs text-success" id="count-growth">
+                                            <i class="fas fa-arrow-up"></i>
                                         </div>
                                     </div>
                                     <div class="col-auto">
@@ -85,12 +87,12 @@ $page_title = "Analyse des Ventes - CRM Intelligent";
                             <div class="card-body">
                                 <div class="row no-gutters align-items-center">
                                     <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                        <div id="kpi-avg-label" class="text-xs font-weight-bold text-info text-uppercase mb-1">
                                             Ticket moyen
                                         </div>
-                                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="avg-ticket">€1,314</div>
-                                        <div class="text-xs text-success">
-                                            <i class="fas fa-arrow-up"></i> +6.8% vs mois dernier
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="avg-ticket">Chargement...</div>
+                                       <div class="text-xs text-success" id="avg-growth">
+                                            <i class="fas fa-arrow-up"></i>
                                         </div>
                                     </div>
                                     <div class="col-auto">
@@ -109,10 +111,15 @@ $page_title = "Analyse des Ventes - CRM Intelligent";
                                         <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
                                             Objectif atteint
                                         </div>
-                                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="goal-achieved">78%</div>
-                                        <div class="progress progress-sm mt-2">
-                                            <div class="progress-bar bg-warning" style="width: 78%"></div>
-                                        </div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="goal-achieved">Chargement...</div>
+                                            <div class="progress progress-sm mt-2">
+                                                <div 
+                                                    class="progress-bar bg-warning" 
+                                                    id="goal-progress"
+                                                    role="progressbar"
+                                                    style="width:0%">
+                                                </div>
+                                            </div>
                                     </div>
                                     <div class="col-auto">
                                         <i class="fas fa-target fa-2x text-gray-300"></i>
@@ -128,12 +135,26 @@ $page_title = "Analyse des Ventes - CRM Intelligent";
                     <div class="col-xl-8">
                         <div class="card shadow">
                             <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                                <h6 class="m-0 font-weight-bold text-primary">Évolution des Ventes</h6>
+                                <h6 id="sales-chart-title"  class="m-0 font-weight-bold text-primary">Évolution des Ventes</h6>
                                 <div class="btn-group btn-group-sm">
                                     <button class="btn btn-outline-primary active" data-period="7d">7j</button>
                                     <button class="btn btn-outline-primary" data-period="30d">30j</button>
                                     <button class="btn btn-outline-primary" data-period="90d">90j</button>
                                     <button class="btn btn-outline-primary" data-period="1y">1an</button>
+                                </div>
+
+                                <div class="btn-group btn-group-sm me-3" id="salesSourceSwitcher">
+                                    <button class="btn btn-primary active" data-source="opportunities">
+                                        Opportunités
+                                    </button>
+
+                                    <button class="btn btn-outline-primary" data-source="erp_sales">
+                                        Ventes (ERP)
+                                    </button>
+
+                                    <button class="btn btn-outline-primary" data-source="missions">
+                                        Missions facturées
+                                    </button>
                                 </div>
                             </div>
                             <div class="card-body">
@@ -186,7 +207,7 @@ $page_title = "Analyse des Ventes - CRM Intelligent";
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
-                            <table class="table table-bordered" id="salesAnalysisTable">
+                            <table class="table table-bordered text-light " id="salesAnalysisTable">
                                 <thead>
                                     <tr>
                                         <th>Période</th>
@@ -198,52 +219,8 @@ $page_title = "Analyse des Ventes - CRM Intelligent";
                                         <th>Meilleur Commercial</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <tr>
-                                        <td><strong>Cette semaine</strong></td>
-                                        <td>€67,450</td>
-                                        <td>52</td>
-                                        <td>€1,297</td>
-                                        <td><span class="text-success">+12%</span></td>
-                                        <td>CRM Pro</td>
-                                        <td>Marie Martin</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Semaine dernière</strong></td>
-                                        <td>€58,920</td>
-                                        <td>47</td>
-                                        <td>€1,254</td>
-                                        <td><span class="text-success">+8%</span></td>
-                                        <td>Analytics Plus</td>
-                                        <td>Jean Dupont</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Ce mois</strong></td>
-                                        <td>€245,780</td>
-                                        <td>187</td>
-                                        <td>€1,314</td>
-                                        <td><span class="text-success">+15%</span></td>
-                                        <td>CRM Pro</td>
-                                        <td>Marie Martin</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Mois dernier</strong></td>
-                                        <td>€213,456</td>
-                                        <td>173</td>
-                                        <td>€1,234</td>
-                                        <td><span class="text-success">+5%</span></td>
-                                        <td>Dashboard BI</td>
-                                        <td>Pierre Durand</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Ce trimestre</strong></td>
-                                        <td>€678,900</td>
-                                        <td>524</td>
-                                        <td>€1,296</td>
-                                        <td><span class="text-success">+18%</span></td>
-                                        <td>CRM Pro</td>
-                                        <td>Marie Martin</td>
-                                    </tr>
+                                <tbody id="salesAnalysisBody">
+                                  
                                 </tbody>
                             </table>
                         </div>

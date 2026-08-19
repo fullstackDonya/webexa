@@ -79,6 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stage      = trim($_POST['stage'] ?? $contact['stage'] ?? 'lead');
     $source     = trim($_POST['source'] ?? $contact['source'] ?? '');
     $assigned_to = isset($_POST['assigned_to']) && $_POST['assigned_to'] !== '' ? intval($_POST['assigned_to']) : null;
+    $budget    = trim($_POST['budget'] ?? $contact['budget'] ?? '');
 
     if ($first_name === '' || $last_name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error_message = 'Prénom, nom et email valides sont requis.';
@@ -95,6 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     stage = ?, 
                     source = ?, 
                     assigned_to = ?,
+                    budget = ?,
                     updated_at = NOW()
                 WHERE id = ? AND (customer_id = ? OR assigned_to = ?)
             ");
@@ -108,6 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stage,
                 $source,
                 $assigned_to,
+                $budget,    
                 $id,
                 $customer_id,
                 $user_id
@@ -126,7 +129,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'assigned_to' => $assigned_to
             ];
             $ai_score = update_lead_ai_score($pdo, $id, $lead_data);
-            
+
+            // Synchroniser l'opportunité liée (si elle existe)
+            try {
+                $opp_title = trim($first_name . ' ' . $last_name);
+                $pdo->prepare("
+                    UPDATE opportunities SET
+                        title       = ?,
+                        company_id  = ?,
+                        source      = ?,
+                        assigned_to = ?,
+                        updated_at  = NOW()
+                    WHERE lead_id = ?
+                ")->execute([$opp_title, $company_id, $source ?: null, $assigned_to, $id]);
+            } catch (Throwable $ignore) {}
+
             $success_message = 'Lead mis à jour.';
             header('Location: leads.php?msg=' . rawurlencode($success_message));
             exit;
@@ -272,6 +289,11 @@ $page_title = "Éditer Lead - CRM Intelligent";
                                         value="<?php echo htmlspecialchars(isset($contact['created_at']) ? date('d/m/Y H:i', strtotime($contact['created_at'])) : ''); ?>" disabled>
                                 </div>
                                 <div class="col-md-6">
+                                    <label class="form-label">Budget</label>
+                                    <input type="text" name="budget" class="form-control" 
+                                        value="<?php echo htmlspecialchars($contact['budget'] ?? ''); ?>">
+                                </div>
+                                <div class="col-md-6">
                                     <label class="form-label">Mis à jour le</label>
                                     <input type="text" class="form-control" 
                                         value="<?php echo htmlspecialchars(isset($contact['updated_at']) ? date('d/m/Y H:i', strtotime($contact['updated_at'])) : ''); ?>" disabled>
@@ -306,6 +328,7 @@ $page_title = "Éditer Lead - CRM Intelligent";
         </div>
     </div>
 
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
 </body>

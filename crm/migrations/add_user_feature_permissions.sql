@@ -1,0 +1,25 @@
+-- Permissions fonctionnelles par utilisateur.
+-- Les valeurs par défaut a 1 preservent l'acces des comptes existants.
+ALTER TABLE users
+    ADD COLUMN can_access_analytics TINYINT(1) NOT NULL DEFAULT 1,
+    ADD COLUMN can_access_pipeline TINYINT(1) NOT NULL DEFAULT 1,
+    ADD COLUMN can_access_tasks TINYINT(1) NOT NULL DEFAULT 1,
+    ADD COLUMN can_access_calls TINYINT(1) NOT NULL DEFAULT 1,
+    ADD COLUMN can_access_clients TINYINT(1) NOT NULL DEFAULT 1,
+    ADD COLUMN can_access_leads TINYINT(1) NOT NULL DEFAULT 1,
+    ADD COLUMN can_access_folders TINYINT(1) NOT NULL DEFAULT 1,
+    ADD COLUMN can_access_missions TINYINT(1) NOT NULL DEFAULT 1,
+    ADD COLUMN can_access_billing TINYINT(1) NOT NULL DEFAULT 1,
+    ADD COLUMN can_access_mail TINYINT(1) NOT NULL DEFAULT 1,
+    ADD COLUMN can_access_ai_agents TINYINT(1) NOT NULL DEFAULT 1,
+    ADD COLUMN can_access_ai_actions TINYINT(1) NOT NULL DEFAULT 1,
+    ADD COLUMN can_access_campaigns TINYINT(1) NOT NULL DEFAULT 1,
+    ADD COLUMN can_access_whatsapp TINYINT(1) NOT NULL DEFAULT 1,
+    ADD COLUMN can_access_email TINYINT(1) NOT NULL DEFAULT 1,
+    ADD COLUMN can_access_invoices TINYINT(1) NOT NULL DEFAULT 1,
+    ADD COLUMN can_access_quotes TINYINT(1) NOT NULL DEFAULT 1,
+    ADD COLUMN can_access_sales TINYINT(1) NOT NULL DEFAULT 1,
+    ADD COLUMN can_access_planning TINYINT(1) NOT NULL DEFAULT 1,
+    ADD COLUMN can_access_hr TINYINT(1) NOT NULL DEFAULT 1,
+    ADD COLUMN can_access_payroll TINYINT(1) NOT NULL DEFAULT 1,
+    ADD COLUMN can_generate_payroll TINYINT(1) NOT NULL DEFAULT 1;

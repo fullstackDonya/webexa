@@ -1,0 +1,6 @@
+first_name,last_name,email,phone,phone2,phone3,company,display_name,secteur_activite,position,address,heures_ouverture,url,tags,description,source,status,budget
+Jean,Dupont,jean.dupont@example.com,+33612345678,+33698765432,,Acme Corp,Acme,Informatique,Directeur IT,123 Rue de Paris,09:00-18:00,https://acme.com,IT Solutions,Excellent prospect pour projet digital,LinkedIn,new,50000
+Marie,Martin,marie.martin@example.com,+33712345678,,,TechSoft Solutions,TechSoft,Télécommunications,Responsable Ventes,45 Avenue Montaigne,08:30-17:30,https://techsoft.fr,Télécom,PME en croissance,Email,contacted,30000
+,,,+33812345678,+33812345679,+33812345680,Restaurant Étoile,L'Étoile,Restauration,,,456 Boulevard Saint-Germain,11:30-23:00,https://resto-etoile.com,Restaurant, 3 étoiles,Restaurant 3 étoiles - très qualifié,Web scraping,qualified,80000
+Pierre,,pierre@email.com,+33912345678,,,,Consultant,Conseil Stratégique,Consultant Senior,,Paris,09:00-19:00,https://conseil-strat.com,Stratégie,Spécialiste transformation digitale,Internal referral,new,100000
+Sophie,Leclerc,,+33612111111,+33612111112,,ABC Consulting,ABC,Services Professionnels,Manager,789 Rue des Lilas,09:00-19:00,,Conseil,Société en expansion cherchant partenaires,Appel sortant,new,

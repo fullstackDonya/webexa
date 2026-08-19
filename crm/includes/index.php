@@ -70,7 +70,7 @@ if ($customer_id) {
         $total_revenue = floatval($stmt->fetchColumn());
 
         // Active clients count (companies with status 'client' and active)
-        $stmt = $pdo->prepare("SELECT COUNT(DISTINCT c.id) FROM companies c WHERE c.customer_id = ? AND c.status = 'client' AND c.is_active = 1");
+        $stmt = $pdo->prepare("SELECT COUNT(DISTINCT c.id) FROM companies c WHERE c.customer_id = ? AND c.status = 'client' AND c.is_active = 1 AND c.interne_customer = 0");
         $stmt->execute([$customer_id]);
         $active_clients = intval($stmt->fetchColumn());
 
@@ -105,7 +105,7 @@ if ($customer_id) {
         $total_revenue = floatval($stmt->fetchColumn());
 
         // Active clients assigned to user
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM companies WHERE assigned_to = ? AND status = 'client' AND is_active = 1");
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM companies WHERE assigned_to = ? AND status = 'client' AND is_active = 1 AND interne_customer = 0");
         $stmt->execute([$user_id]);
         $active_clients = intval($stmt->fetchColumn());
 

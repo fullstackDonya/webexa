@@ -3,8 +3,8 @@
 require_once __DIR__ . '/../../vendor/autoload.php';
 
 // Chargement du .env depuis la racine du projet
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../../');
-$dotenv->load();
+// $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../../');
+// $dotenv->load();
 
 // Configuration de la base de données depuis .env
 if (!defined('DB_HOST')) define('DB_HOST', $_ENV['DB_HOST'] ?? 'localhost');

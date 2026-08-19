@@ -82,6 +82,10 @@ try {
         $stmt->execute([$customer_id, $user_id]);
     }
 
+    if (!$customer_id) {
+        throw new RuntimeException('Impossible de rattacher le compte à un customer');
+    }
+
     // 2. Créer ou mettre à jour la company avec les données du customer
     $stmt = $pdo->prepare("
         SELECT id FROM companies WHERE customer_id = ? LIMIT 1
@@ -165,18 +169,24 @@ try {
 
     // 4. Update user info
     $stmt = $pdo->prepare("
-        UPDATE users SET
+            UPDATE users SET
             first_name = ?,
             last_name = ?,
-            onboarding_completed = 1,
+                customer_id = ?,
+                onboarding_completed = CASE WHEN ? > 0 THEN 1 ELSE 0 END,
             updated_at = NOW()
-        WHERE id = ?
+            WHERE id = ? AND ? > 0
     ");
     $stmt->execute([
         $data['profile']['first_name'] ?? '',
         $data['profile']['last_name'] ?? '',
-        $user_id
+        $customer_id,
+        $customer_id,
+        $user_id,
+        $customer_id,
     ]);
+
+    $_SESSION['customer_id'] = $customer_id;
 
     $pdo->commit();
 

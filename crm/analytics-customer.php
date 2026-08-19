@@ -211,66 +211,132 @@ $page_title = "Comportement Client";
                         <div class="col-lg-12">
                             <div class="card shadow mb-4">
                                 <div class="card-header py-3">
-                                    <h6 class="m-0 font-weight-bold text-primary">Parcours Client Type</h6>
+                                    <h6 class="m-0 font-weight-bold text-primary">
+                                        Parcours Client Type
+                                    </h6>
                                 </div>
+
                                 <div class="card-body">
                                     <div id="customer-journey" class="text-center">
+
                                         <div class="row">
+
+                                            <!-- Découverte -->
                                             <div class="col-md-2">
                                                 <div class="journey-step">
                                                     <div class="step-icon bg-primary">
                                                         <i class="fas fa-eye text-white"></i>
                                                     </div>
+
                                                     <h6>Découverte</h6>
-                                                    <small class="text-muted">Premier contact</small>
+                                                    <small class="text-muted">
+                                                        Premier contact
+                                                    </small>
+
+                                                    <div class="journey-count fw-bold text-primary mt-2">
+                                                        0
+                                                    </div>
                                                 </div>
                                             </div>
+
+
+                                            <!-- Considération -->
                                             <div class="col-md-2">
                                                 <div class="journey-step">
                                                     <div class="step-icon bg-info">
                                                         <i class="fas fa-search text-white"></i>
                                                     </div>
+
                                                     <h6>Considération</h6>
-                                                    <small class="text-muted">Évaluation</small>
+                                                    <small class="text-muted">
+                                                        Évaluation
+                                                    </small>
+
+                                                    <div class="journey-count fw-bold text-info mt-2">
+                                                        0
+                                                    </div>
                                                 </div>
                                             </div>
+
+
+                                            <!-- Achat -->
                                             <div class="col-md-2">
                                                 <div class="journey-step">
                                                     <div class="step-icon bg-warning">
                                                         <i class="fas fa-shopping-cart text-white"></i>
                                                     </div>
+
                                                     <h6>Achat</h6>
-                                                    <small class="text-muted">Conversion</small>
+                                                    <small class="text-muted">
+                                                        Conversion
+                                                    </small>
+
+                                                    <div class="journey-count fw-bold text-warning mt-2">
+                                                        0
+                                                    </div>
                                                 </div>
                                             </div>
+
+
+                                            <!-- Satisfaction -->
                                             <div class="col-md-2">
                                                 <div class="journey-step">
                                                     <div class="step-icon bg-success">
                                                         <i class="fas fa-thumbs-up text-white"></i>
                                                     </div>
+
                                                     <h6>Satisfaction</h6>
-                                                    <small class="text-muted">Expérience</small>
+                                                    <small class="text-muted">
+                                                        Expérience
+                                                    </small>
+
+                                                    <div class="journey-count fw-bold text-success mt-2">
+                                                        0
+                                                    </div>
                                                 </div>
                                             </div>
+
+
+                                            <!-- Fidélisation -->
                                             <div class="col-md-2">
                                                 <div class="journey-step">
                                                     <div class="step-icon bg-primary">
                                                         <i class="fas fa-heart text-white"></i>
                                                     </div>
+
                                                     <h6>Fidélisation</h6>
-                                                    <small class="text-muted">Rétention</small>
+                                                    <small class="text-muted">
+                                                        Rétention
+                                                    </small>
+
+                                                    <div class="journey-count fw-bold text-primary mt-2">
+                                                        0
+                                                    </div>
                                                 </div>
                                             </div>
+
+
+                                            <!-- Ambassadeur -->
                                             <div class="col-md-2">
                                                 <div class="journey-step">
                                                     <div class="step-icon bg-secondary">
                                                         <i class="fas fa-share text-white"></i>
                                                     </div>
+
                                                     <h6>Ambassadeur</h6>
-                                                    <small class="text-muted">Recommandation</small>
+                                                    <small class="text-muted">
+                                                        Recommandation
+                                                    </small>
+
+                                                    <div class="journey-count fw-bold text-secondary mt-2">
+                                                        0
+                                                    </div>
                                                 </div>
                                             </div>
+
+
                                         </div>
+
                                     </div>
                                 </div>
                             </div>

@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 from datetime import datetime
+from fastapi.responses import JSONResponse
 
 from config import API_CONFIG, AGENTS_ENABLED
 from database import db, AgentLog, AgentAction
@@ -137,7 +138,6 @@ async def process_pending_emails(
 
 
 # ========== Routes Lead Analyst ==========
-
 @app.post("/api/leads/score")
 async def score_lead(
     request: LeadScoreRequest,
@@ -146,17 +146,26 @@ async def score_lead(
     """Scorer un lead"""
     if not AGENTS_ENABLED["lead"]:
         raise HTTPException(status_code=503, detail="Lead analyst agent is disabled")
-    
-    result = lead_analyst.score_lead(
-        lead_id=request.lead_id,
-        customer_id=request.customer_id
-    )
-    
-    if not result["success"]:
-        raise HTTPException(status_code=500, detail=result.get("error"))
-    
-    return result
 
+    try:
+        result = lead_analyst.score_lead(
+            lead_id=request.lead_id,
+            customer_id=request.customer_id
+        )
+
+        print("RESULT SCORE:", result)
+
+        if not result["success"]:
+            raise HTTPException(
+                status_code=500,
+                detail=result.get("error")
+            )
+
+        return result
+
+    except Exception as e:
+        print("ERREUR SCORE LEAD:", repr(e))
+        raise
 
 @app.get("/api/leads/hot/{customer_id}")
 async def get_hot_leads(
@@ -259,13 +268,14 @@ async def get_logs(
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
     """Gestionnaire d'erreurs global"""
-    return {
-        "error": str(exc),
-        "type": type(exc).__name__,
-        "timestamp": datetime.now().isoformat()
-    }
-
-
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": str(exc),
+            "type": type(exc).__name__,
+            "timestamp": datetime.now().isoformat()
+        }
+    )
 # ========== Démarrage ==========
 
 if __name__ == "__main__":
